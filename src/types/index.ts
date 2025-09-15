@@ -37,19 +37,10 @@ export interface Business {
   phone: string
   address: string
   business_image_url?: string
-  theme_settings: BusinessTheme
   created_at: string
   updated_at: string
 }
 
-export interface BusinessTheme {
-  primary_color?: string
-  secondary_color?: string
-  logo_url?: string
-  background_image?: string
-  font_family?: string
-  custom_css?: string
-}
 
 export interface Service {
   id: string

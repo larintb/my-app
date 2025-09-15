@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { useBusinessTheme } from '@/hooks/useBusinessTheme'
 
 interface PageProps {
   params: Promise<{ businessname: string }>
@@ -30,8 +29,6 @@ export default function ServicesPage({ params }: PageProps) {
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [editingService, setEditingService] = useState<Service | null>(null)
 
-  // Apply business theme
-  const { isLoading: themeLoading } = useBusinessTheme(user?.businessId)
 
   // Form state
   const [formData, setFormData] = useState({
@@ -192,10 +189,10 @@ export default function ServicesPage({ params }: PageProps) {
     }
   }
 
-  if (isLoading || themeLoading) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      <div className="min-h-screen bg-app flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 accent-text"></div>
       </div>
     )
   }
@@ -205,7 +202,7 @@ export default function ServicesPage({ params }: PageProps) {
   }
 
   return (
-    <div className="min-h-screen theme-font" style={{ backgroundColor: 'var(--background, #0a0a0a)' }}>
+    <div className="min-h-screen bg-app">
       <div className="p-4">
         <div className="mx-auto max-w-6xl space-y-6">
           {/* Header */}
@@ -219,14 +216,14 @@ export default function ServicesPage({ params }: PageProps) {
               >
                 ← Back to Dashboard
               </Button>
-              <h1 className="text-3xl font-bold theme-primary" style={{ color: 'var(--theme-primary, #3b82f6)' }}>
+              <h1 className="text-3xl font-bold accent-text">
                 Services & Pricing
               </h1>
-              <p className="text-gray-400 mt-1">Manage your services and pricing</p>
+              <p className="text-muted mt-1">Manage your services and pricing</p>
             </div>
             <Button
               onClick={() => setShowCreateForm(true)}
-              className="theme-bg-primary"
+              className="btn-primary"
               disabled={showCreateForm}
             >
               + Add Service
@@ -276,13 +273,13 @@ export default function ServicesPage({ params }: PageProps) {
                   />
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-app mb-2">
                       Description (optional)
                     </label>
                     <textarea
                       value={formData.description}
                       onChange={handleInputChange('description')}
-                      className="w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-gray-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-md border border-border bg-input px-3 py-2 text-app placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent"
                       rows={3}
                       placeholder="Describe your service..."
                     />
@@ -292,7 +289,7 @@ export default function ServicesPage({ params }: PageProps) {
                     <Button
                       type="submit"
                       loading={isSubmitting}
-                      className="theme-bg-primary"
+                      className="btn-primary"
                     >
                       {editingService ? 'Update Service' : 'Create Service'}
                     </Button>
@@ -322,23 +319,23 @@ export default function ServicesPage({ params }: PageProps) {
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
                     <div key={i} className="animate-pulse">
-                      <div className="h-20 bg-gray-700 rounded"></div>
+                      <div className="h-20 bg-muted rounded"></div>
                     </div>
                   ))}
                 </div>
               ) : services.length > 0 ? (
                 <div className="space-y-4">
                   {services.map((service) => (
-                    <div key={service.id} className="border border-gray-700 rounded-lg p-4">
+                    <div key={service.id} className="border border-border rounded-lg p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-3">
-                            <h3 className="text-lg font-semibold text-gray-100">{service.name}</h3>
-                            <span className="text-2xl font-bold text-green-400">${service.price}</span>
-                            <span className="text-sm text-gray-400">({service.duration_minutes} min)</span>
+                            <h3 className="text-lg font-semibold text-app">{service.name}</h3>
+                            <span className="text-2xl font-bold accent-text">${service.price}</span>
+                            <span className="text-sm text-muted">({service.duration_minutes} min)</span>
                           </div>
                           {service.description && (
-                            <p className="text-gray-400 mt-1">{service.description}</p>
+                            <p className="text-muted mt-1">{service.description}</p>
                           )}
                         </div>
                         <div className="flex gap-2">
@@ -365,13 +362,13 @@ export default function ServicesPage({ params }: PageProps) {
               ) : (
                 <div className="text-center py-12">
                   <div className="text-6xl mb-4">⚙️</div>
-                  <h3 className="text-xl font-semibold text-gray-100 mb-2">No services yet</h3>
-                  <p className="text-gray-400 mb-4">
+                  <h3 className="text-xl font-semibold text-app mb-2">No services yet</h3>
+                  <p className="text-muted mb-4">
                     Create your first service to start accepting bookings
                   </p>
                   <Button
                     onClick={() => setShowCreateForm(true)}
-                    className="theme-bg-primary"
+                    className="btn-primary"
                   >
                     + Create First Service
                   </Button>

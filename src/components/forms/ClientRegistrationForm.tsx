@@ -92,13 +92,13 @@ export function ClientRegistrationForm({ token, businessName, onSuccess }: Clien
   }
 
   return (
-    <div className="min-h-screen theme-font p-4" style={{ backgroundColor: 'var(--background, #f0f9ff)' }}>
+    <div className="min-h-screen theme-font p-4 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
       <div className="mx-auto max-w-md">
         <div className="mb-8 text-center">
-          <div className="text-6xl mb-4">📱</div>
+          <div className="text-6xl mb-4">🌱</div>
           <h1 className="text-2xl font-bold text-gray-900">Welcome!</h1>
           <p className="mt-2 text-gray-600">
-            You're registering for <span className="font-semibold theme-primary" style={{ color: 'var(--theme-primary, #3b82f6)' }}>{businessName}</span>
+            You're registering for <span className="font-semibold text-green-600">{businessName}</span>
           </p>
         </div>
 
@@ -141,8 +141,7 @@ export function ClientRegistrationForm({ token, businessName, onSuccess }: Clien
               <Button
                 type="submit"
                 loading={isSubmitting}
-                className="w-full mt-6 theme-bg-primary"
-                style={{ backgroundColor: 'var(--theme-primary, #3b82f6)' }}
+                className="w-full mt-6 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-medium"
                 size="lg"
               >
                 {isSubmitting ? 'Creating Account...' : 'Get Started'}

@@ -63,7 +63,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
       phone,
       address,
       business_image_url,
-      theme_settings
+      address_details
     } = body
 
     // Validate required fields
@@ -89,7 +89,16 @@ export async function PUT(request: Request, { params }: RouteParams) {
       phone: phone.trim(),
       address: address.trim(),
       business_image_url: business_image_url?.trim() || null,
-      theme_settings: theme_settings || {}
+      // Include address details if provided
+      ...(address_details && {
+        address_latitude: address_details.latitude,
+        address_longitude: address_details.longitude,
+        address_city: address_details.city,
+        address_state: address_details.state,
+        address_country: address_details.country,
+        address_postal_code: address_details.postal_code,
+        address_place_id: address_details.place_id
+      })
     })
 
     return NextResponse.json({

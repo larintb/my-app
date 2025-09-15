@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { useBusinessTheme } from '@/hooks/useBusinessTheme'
+import { AddressAutocomplete, AddressDetails } from '@/components/ui/AddressAutocomplete'
 
 interface PageProps {
   params: Promise<{ businessname: string }>
@@ -18,7 +18,6 @@ interface BusinessData {
   phone: string
   address: string
   business_image_url?: string
-  theme_settings?: any
 }
 
 export default function BusinessSettingsPage({ params }: PageProps) {
@@ -39,17 +38,9 @@ export default function BusinessSettingsPage({ params }: PageProps) {
     business_image_url: ''
   })
   const [formErrors, setFormErrors] = useState<any>({})
+  const [addressDetails, setAddressDetails] = useState<AddressDetails | null>(null)
 
-  // Theme settings
-  const [themeData, setThemeData] = useState({
-    primaryColor: '#3b82f6',
-    secondaryColor: '#6b7280',
-    backgroundColor: '#0a0a0a',
-    textColor: '#fafafa'
-  })
 
-  // Apply business theme
-  const { isLoading: themeLoading, theme: currentTheme, refreshTheme } = useBusinessTheme(user?.businessId)
 
   useEffect(() => {
     const getParams = async () => {
@@ -94,15 +85,6 @@ export default function BusinessSettingsPage({ params }: PageProps) {
           business_image_url: data.business.business_image_url || ''
         })
 
-        // Load theme settings
-        if (data.business.theme_settings) {
-          setThemeData({
-            primaryColor: data.business.theme_settings.primaryColor || '#3b82f6',
-            secondaryColor: data.business.theme_settings.secondaryColor || '#6b7280',
-            backgroundColor: data.business.theme_settings.backgroundColor || '#0a0a0a',
-            textColor: data.business.theme_settings.textColor || '#fafafa'
-          })
-        }
       }
     } catch (error) {
       console.error('Error loading business data:', error)
@@ -118,8 +100,14 @@ export default function BusinessSettingsPage({ params }: PageProps) {
     }
   }
 
-  const handleThemeChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setThemeData(prev => ({ ...prev, [field]: e.target.value }))
+
+  const handleAddressSelect = (address: AddressDetails) => {
+    setAddressDetails(address)
+    setFormData(prev => ({ ...prev, address: address.fullAddress }))
+    // Clear address error when address is selected
+    if (formErrors.address) {
+      setFormErrors((prev: any) => ({ ...prev, address: '' }))
+    }
   }
 
   const validateForm = () => {
@@ -144,7 +132,18 @@ export default function BusinessSettingsPage({ params }: PageProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          theme_settings: themeData
+          // Include address details if available
+          ...(addressDetails && {
+            address_details: {
+              place_id: addressDetails.placeId,
+              latitude: addressDetails.latitude,
+              longitude: addressDetails.longitude,
+              city: addressDetails.city,
+              state: addressDetails.state,
+              country: addressDetails.country,
+              postal_code: addressDetails.postalCode
+            }
+          })
         })
       })
 
@@ -153,13 +152,7 @@ export default function BusinessSettingsPage({ params }: PageProps) {
       if (data.success) {
         alert('Business settings saved successfully!')
 
-        // Clear theme cache to force refresh
-        localStorage.removeItem(`businessTheme_${user.businessId}`)
-
         await loadBusinessData(user.businessId)
-        if (refreshTheme) {
-          await refreshTheme()
-        }
       } else {
         alert('Failed to save settings: ' + data.error)
       }
@@ -171,10 +164,10 @@ export default function BusinessSettingsPage({ params }: PageProps) {
     }
   }
 
-  if (isLoading || themeLoading) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      <div className="min-h-screen bg-app flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 accent-text"></div>
       </div>
     )
   }
@@ -184,7 +177,7 @@ export default function BusinessSettingsPage({ params }: PageProps) {
   }
 
   return (
-    <div className="min-h-screen theme-font" style={{ backgroundColor: 'var(--background, #0a0a0a)' }}>
+    <div className="min-h-screen bg-app">
       <div className="p-4">
         <div className="mx-auto max-w-4xl space-y-6">
           {/* Header */}
@@ -192,21 +185,20 @@ export default function BusinessSettingsPage({ params }: PageProps) {
             <div>
               <Button
                 onClick={() => router.push(`/${businessName}/dashboard`)}
-                variant="outline"
+                className="btn-secondary mb-4"
                 size="sm"
-                className="mb-4"
               >
                 ← Back to Dashboard
               </Button>
-              <h1 className="text-3xl font-bold theme-primary" style={{ color: 'var(--theme-primary, #3b82f6)' }}>
+              <h1 className="text-3xl font-bold accent-text">
                 Business Settings
               </h1>
-              <p className="text-gray-400 mt-1">Manage your business information and appearance</p>
+              <p className="text-muted mt-1">Manage your business information</p>
             </div>
             <Button
               onClick={saveBusinessSettings}
               loading={isSaving}
-              className="theme-bg-primary"
+              className="btn-primary"
             >
               Save Settings
             </Button>
@@ -218,10 +210,10 @@ export default function BusinessSettingsPage({ params }: PageProps) {
                 <Card key={i}>
                   <CardContent className="pt-6">
                     <div className="animate-pulse space-y-4">
-                      <div className="h-4 bg-gray-700 rounded w-1/4"></div>
+                      <div className="h-4 bg-card rounded w-1/4"></div>
                       <div className="space-y-3">
-                        <div className="h-10 bg-gray-700 rounded"></div>
-                        <div className="h-10 bg-gray-700 rounded"></div>
+                        <div className="h-10 bg-card rounded"></div>
+                        <div className="h-10 bg-card rounded"></div>
                       </div>
                     </div>
                   </CardContent>
@@ -276,158 +268,61 @@ export default function BusinessSettingsPage({ params }: PageProps) {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-app mb-2">
                       Business Address *
                     </label>
-                    <textarea
-                      value={formData.address}
-                      onChange={handleInputChange('address')}
-                      className={`w-full rounded-md border px-3 py-2 text-gray-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        formErrors.address ? 'border-red-400 bg-red-950' : 'border-gray-600 bg-gray-800'
-                      }`}
-                      rows={3}
-                      placeholder="123 Main Street, City, State 12345"
-                      required
+                    <AddressAutocomplete
+                      onAddressSelect={handleAddressSelect}
+                      placeholder="Busca y actualiza la dirección de tu negocio..."
+                      initialValue={formData.address}
+                      disabled={isSaving}
+                      className="w-full"
+                      darkMode={false}
                     />
                     {formErrors.address && (
-                      <p className="mt-1 text-sm text-red-400">{formErrors.address}</p>
+                      <p className="mt-1 text-sm" style={{ color: 'var(--danger-color)' }}>{formErrors.address}</p>
+                    )}
+                    <p className="mt-1 text-xs text-muted">
+                      Busca tu dirección para actualizarla con mayor precisión. Soportamos Estados Unidos y México.
+                    </p>
+
+                    {/* Selected Address Details */}
+                    {addressDetails && addressDetails.fullAddress && (
+                      <div className="mt-3 p-3 rounded-lg" style={{
+                        backgroundColor: 'var(--success-color, #10b981)',
+                        opacity: 0.1,
+                        border: '1px solid var(--success-color, #10b981)'
+                      }}>
+                        <div className="flex items-start">
+                          <svg className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" style={{ color: 'var(--success-color, #10b981)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium" style={{ color: 'var(--success-color, #10b981)' }}>Nueva Dirección Seleccionada</p>
+                            <p className="text-sm text-app">{addressDetails.fullAddress}</p>
+                            {(addressDetails.city || addressDetails.state) && (
+                              <p className="text-xs text-muted mt-1">
+                                {addressDetails.city && `${addressDetails.city}, `}
+                                {addressDetails.state && addressDetails.state}
+                                {addressDetails.postalCode && ` ${addressDetails.postalCode}`}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     )}
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Theme Customization */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Theme Customization</CardTitle>
-                  <CardDescription>
-                    Customize the appearance of your business pages
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
-                        Primary Color
-                      </label>
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="color"
-                          value={themeData.primaryColor}
-                          onChange={handleThemeChange('primaryColor')}
-                          className="w-12 h-10 rounded border border-gray-600 bg-gray-800"
-                        />
-                        <Input
-                          value={themeData.primaryColor}
-                          onChange={handleThemeChange('primaryColor')}
-                          placeholder="#3b82f6"
-                          className="flex-1"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
-                        Secondary Color
-                      </label>
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="color"
-                          value={themeData.secondaryColor}
-                          onChange={handleThemeChange('secondaryColor')}
-                          className="w-12 h-10 rounded border border-gray-600 bg-gray-800"
-                        />
-                        <Input
-                          value={themeData.secondaryColor}
-                          onChange={handleThemeChange('secondaryColor')}
-                          placeholder="#6b7280"
-                          className="flex-1"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
-                        Background Color
-                      </label>
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="color"
-                          value={themeData.backgroundColor}
-                          onChange={handleThemeChange('backgroundColor')}
-                          className="w-12 h-10 rounded border border-gray-600 bg-gray-800"
-                        />
-                        <Input
-                          value={themeData.backgroundColor}
-                          onChange={handleThemeChange('backgroundColor')}
-                          placeholder="#0a0a0a"
-                          className="flex-1"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
-                        Text Color
-                      </label>
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="color"
-                          value={themeData.textColor}
-                          onChange={handleThemeChange('textColor')}
-                          className="w-12 h-10 rounded border border-gray-600 bg-gray-800"
-                        />
-                        <Input
-                          value={themeData.textColor}
-                          onChange={handleThemeChange('textColor')}
-                          placeholder="#fafafa"
-                          className="flex-1"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="border border-gray-700 rounded-lg p-4 mt-6">
-                    <h3 className="font-semibold text-gray-200 mb-3">Theme Preview</h3>
-                    <div
-                      className="rounded-lg p-4 border"
-                      style={{
-                        backgroundColor: themeData.backgroundColor,
-                        color: themeData.textColor,
-                        borderColor: themeData.secondaryColor
-                      }}
-                    >
-                      <h4
-                        className="text-lg font-semibold mb-2"
-                        style={{ color: themeData.primaryColor }}
-                      >
-                        {formData.business_name || 'Your Business Name'}
-                      </h4>
-                      <p style={{ color: themeData.textColor }}>
-                        This is how your business pages will look with these colors.
-                      </p>
-                      <button
-                        className="mt-2 px-4 py-2 rounded font-medium"
-                        style={{
-                          backgroundColor: themeData.primaryColor,
-                          color: themeData.backgroundColor
-                        }}
-                      >
-                        Sample Button
-                      </button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
 
               {/* Save Button */}
               <div className="flex justify-center">
                 <Button
                   onClick={saveBusinessSettings}
                   loading={isSaving}
-                  className="theme-bg-primary"
+                  className="btn-primary"
                   size="lg"
                 >
                   Save All Settings

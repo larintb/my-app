@@ -32,6 +32,13 @@ export async function POST(request: Request) {
     }
 
     // Verify password
+    if (!user.password_hash) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid account configuration' },
+        { status: 401 }
+      )
+    }
+
     const isPasswordValid = await bcrypt.compare(password, user.password_hash)
     if (!isPasswordValid) {
       return NextResponse.json(

@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { LoginForm } from '@/types'
-import { useBusinessTheme } from '@/hooks/useBusinessTheme'
 
 interface BusinessLoginProps {
   businessName: string
@@ -22,8 +21,6 @@ export function BusinessLoginForm({ businessName, businessId, onSuccess }: Busin
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<Partial<LoginForm & { general: string }>>({})
 
-  // Apply business theme
-  const { isLoading: themeLoading } = useBusinessTheme(businessId)
 
   const handleInputChange = (field: keyof LoginForm) => (
     e: React.ChangeEvent<HTMLInputElement>
@@ -92,24 +89,17 @@ export function BusinessLoginForm({ businessName, businessId, onSuccess }: Busin
     }
   }
 
-  if (themeLoading) {
-    return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-      </div>
-    )
-  }
 
   return (
-    <div className="min-h-screen theme-font" style={{ backgroundColor: 'var(--background, #0a0a0a)' }}>
+    <div className="min-h-screen bg-app">
       <div className="flex items-center justify-center min-h-screen p-4">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <div className="text-6xl mb-4">🏢</div>
-            <h1 className="text-3xl font-bold theme-primary" style={{ color: 'var(--theme-primary, #3b82f6)' }}>
+            <h1 className="text-3xl font-bold accent-text">
               {businessName}
             </h1>
-            <p className="text-gray-400 mt-2">Business Admin Login</p>
+            <p className="text-muted mt-2">Business Admin Login</p>
           </div>
 
           <Card>
@@ -151,7 +141,7 @@ export function BusinessLoginForm({ businessName, businessId, onSuccess }: Busin
                 <Button
                   type="submit"
                   loading={isSubmitting}
-                  className="w-full mt-6 theme-bg-primary"
+                  className="w-full mt-6 btn-primary"
                   size="lg"
                 >
                   {isSubmitting ? 'Signing in...' : 'Sign In'}
@@ -159,7 +149,7 @@ export function BusinessLoginForm({ businessName, businessId, onSuccess }: Busin
               </form>
 
               <div className="mt-6 text-center">
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted">
                   Need help? Contact support for assistance.
                 </p>
               </div>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { ClientRegistrationForm } from '@/components/forms/ClientRegistrationForm'
 import { BusinessLandingPage } from '@/components/layouts/BusinessLandingPage'
+import { ClientAppointmentInterface } from '@/components/client/ClientAppointmentInterface'
 import { Card, CardContent } from '@/components/ui/Card'
 import { useBusinessTheme } from '@/hooks/useBusinessTheme'
 import { Business, Service, User } from '@/types'
@@ -96,16 +97,28 @@ export default function ClientTokenPage({ params }: PageProps) {
 
   if (tokenStatus === 'loading' || themeLoading) {
     return (
-      <div className="min-h-screen theme-font" style={{ backgroundColor: 'var(--background, #f9fafb)' }}>
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
         <div className="flex items-center justify-center min-h-screen p-4">
-          <Card className="w-full max-w-md">
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 theme-border-primary mx-auto mb-4" style={{ borderBottomColor: 'var(--theme-primary, #3b82f6)' }}></div>
-                <p className="text-gray-600">Loading...</p>
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 max-w-md w-full">
+            <div className="text-center">
+              {/* Animated loading spinner */}
+              <div className="relative mb-6">
+                <div className="w-16 h-16 mx-auto">
+                  <div className="absolute inset-0 rounded-full border-4 border-green-100"></div>
+                  <div className="absolute inset-0 rounded-full border-4 border-green-500 border-t-transparent animate-spin"></div>
+                </div>
               </div>
-            </CardContent>
-          </Card>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Cargando...</h3>
+              <p className="text-gray-600">Validando tu acceso y cargando la información del negocio</p>
+              
+              {/* Loading dots animation */}
+              <div className="flex justify-center mt-4 space-x-1">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                <div className="w-2 h-2 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -113,22 +126,40 @@ export default function ClientTokenPage({ params }: PageProps) {
 
   if (tokenStatus === 'invalid') {
     return (
-      <div className="min-h-screen theme-font" style={{ backgroundColor: 'var(--background, #f9fafb)' }}>
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50">
         <div className="flex items-center justify-center min-h-screen p-4">
-          <Card className="w-full max-w-md">
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <div className="text-6xl mb-4">❌</div>
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">Invalid Link</h2>
-                <p className="text-gray-600 mb-4">
-                  This business card link is not valid or has been deactivated.
-                </p>
-                <p className="text-sm text-gray-500">
-                  Please ask the business for a new card or link.
-                </p>
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 max-w-md w-full text-center">
+            {/* Error icon */}
+            <div className="mb-6">
+              <div className="w-20 h-20 mx-auto bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center shadow-lg">
+                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">Enlace No Válido</h2>
+            <p className="text-gray-600 mb-6 leading-relaxed">
+              Este enlace de tarjeta de negocio no es válido o ha sido desactivado.
+            </p>
+            
+            {/* Action suggestions */}
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
+              <h4 className="font-semibold text-amber-800 mb-2">¿Qué puedes hacer?</h4>
+              <ul className="text-sm text-amber-700 space-y-1 text-left">
+                <li>• Solicita una nueva tarjeta al negocio</li>
+                <li>• Verifica que el enlace esté completo</li>
+                <li>• Contacta directamente al establecimiento</li>
+              </ul>
+            </div>
+
+            <button 
+              onClick={() => window.history.back()} 
+              className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-3 px-6 rounded-xl transition duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            >
+              Regresar
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -146,12 +177,20 @@ export default function ClientTokenPage({ params }: PageProps) {
 
   if (tokenStatus === 'registered' && business && user) {
     return (
-      <BusinessLandingPage
-        business={business}
-        services={services}
-        onBookAppointment={handleBookAppointment}
-        onViewSchedule={handleViewSchedule}
-      />
+      <div 
+        className="min-h-screen transition-colors duration-300"
+        style={{ 
+          backgroundColor: 'var(--background, #f8fafc)',
+          color: 'var(--foreground, #1e293b)'
+        }}
+      >
+        <ClientAppointmentInterface
+          business={business}
+          services={services}
+          user={user}
+          token={token}
+        />
+      </div>
     )
   }
 

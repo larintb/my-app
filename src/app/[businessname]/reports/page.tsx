@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { useBusinessTheme } from '@/hooks/useBusinessTheme'
 
 interface PageProps {
   params: Promise<{ businessname: string }>
@@ -41,8 +40,6 @@ export default function ReportsPage({ params }: PageProps) {
   const [loadingReports, setLoadingReports] = useState(true)
   const [dateRange, setDateRange] = useState('3months') // 1month, 3months, 6months, 1year
 
-  // Apply business theme
-  const { isLoading: themeLoading } = useBusinessTheme(user?.businessId)
 
   useEffect(() => {
     const getParams = async () => {
@@ -107,10 +104,10 @@ export default function ReportsPage({ params }: PageProps) {
     })
   }
 
-  if (isLoading || themeLoading) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      <div className="min-h-screen bg-app flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 accent-text"></div>
       </div>
     )
   }
@@ -120,7 +117,7 @@ export default function ReportsPage({ params }: PageProps) {
   }
 
   return (
-    <div className="min-h-screen theme-font" style={{ backgroundColor: 'var(--background, #0a0a0a)' }}>
+    <div className="min-h-screen bg-app">
       <div className="p-4">
         <div className="mx-auto max-w-6xl space-y-6">
           {/* Header */}
@@ -134,10 +131,10 @@ export default function ReportsPage({ params }: PageProps) {
               >
                 ← Back to Dashboard
               </Button>
-              <h1 className="text-3xl font-bold theme-primary" style={{ color: 'var(--theme-primary, #3b82f6)' }}>
+              <h1 className="text-3xl font-bold accent-text">
                 Analytics & Reports
               </h1>
-              <p className="text-gray-400 mt-1">Insights into your business performance</p>
+              <p className="text-muted mt-1">Insights into your business performance</p>
             </div>
           </div>
 
@@ -145,7 +142,7 @@ export default function ReportsPage({ params }: PageProps) {
           <Card>
             <CardContent className="pt-6">
               <div className="flex flex-wrap gap-2">
-                <span className="text-sm text-gray-400 self-center mr-4">Time Period:</span>
+                <span className="text-sm text-muted self-center mr-4">Time Period:</span>
                 {[
                   { key: '1month', label: 'Last Month' },
                   { key: '3months', label: 'Last 3 Months' },
@@ -154,10 +151,10 @@ export default function ReportsPage({ params }: PageProps) {
                 ].map((range) => (
                   <Button
                     key={range.key}
-                    variant={dateRange === range.key ? 'default' : 'outline'}
+                    variant={dateRange === range.key ? 'primary' : 'outline'}
                     size="sm"
                     onClick={() => setDateRange(range.key)}
-                    className={dateRange === range.key ? 'theme-bg-primary' : ''}
+                    className={dateRange === range.key ? 'btn-primary' : ''}
                   >
                     {range.label}
                   </Button>
@@ -172,8 +169,8 @@ export default function ReportsPage({ params }: PageProps) {
                 <Card key={i}>
                   <CardContent className="pt-6">
                     <div className="animate-pulse text-center">
-                      <div className="h-8 w-16 bg-gray-700 rounded mx-auto mb-2"></div>
-                      <div className="h-4 w-20 bg-gray-700 rounded mx-auto"></div>
+                      <div className="h-8 w-16 bg-muted rounded mx-auto mb-2"></div>
+                      <div className="h-4 w-20 bg-muted rounded mx-auto"></div>
                     </div>
                   </CardContent>
                 </Card>
@@ -186,10 +183,10 @@ export default function ReportsPage({ params }: PageProps) {
                 <Card>
                   <CardContent className="pt-6">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-green-400">
+                      <div className="text-2xl font-bold accent-text">
                         {formatCurrency(reportData.totalRevenue)}
                       </div>
-                      <div className="text-sm text-gray-400">Total Revenue</div>
+                      <div className="text-sm text-muted">Total Revenue</div>
                     </div>
                   </CardContent>
                 </Card>
@@ -197,10 +194,10 @@ export default function ReportsPage({ params }: PageProps) {
                 <Card>
                   <CardContent className="pt-6">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-blue-400">
+                      <div className="text-2xl font-bold accent-text">
                         {reportData.totalAppointments}
                       </div>
-                      <div className="text-sm text-gray-400">Total Appointments</div>
+                      <div className="text-sm text-muted">Total Appointments</div>
                     </div>
                   </CardContent>
                 </Card>
@@ -208,10 +205,10 @@ export default function ReportsPage({ params }: PageProps) {
                 <Card>
                   <CardContent className="pt-6">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-purple-400">
+                      <div className="text-2xl font-bold accent-text">
                         {reportData.totalClients}
                       </div>
-                      <div className="text-sm text-gray-400">Total Clients</div>
+                      <div className="text-sm text-muted">Total Clients</div>
                     </div>
                   </CardContent>
                 </Card>
@@ -219,10 +216,10 @@ export default function ReportsPage({ params }: PageProps) {
                 <Card>
                   <CardContent className="pt-6">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-yellow-400">
+                      <div className="text-2xl font-bold accent-text">
                         {formatCurrency(reportData.avgAppointmentValue)}
                       </div>
-                      <div className="text-sm text-gray-400">Avg Appointment Value</div>
+                      <div className="text-sm text-muted">Avg Appointment Value</div>
                     </div>
                   </CardContent>
                 </Card>
@@ -240,22 +237,22 @@ export default function ReportsPage({ params }: PageProps) {
                   <CardContent>
                     <div className="space-y-4">
                       {reportData.monthlyData.map((month, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 border border-gray-700 rounded">
+                        <div key={index} className="flex items-center justify-between p-3 border border-border rounded">
                           <div>
-                            <span className="font-medium text-gray-200">{formatDate(month.month)}</span>
+                            <span className="font-medium text-app">{formatDate(month.month)}</span>
                           </div>
                           <div className="flex gap-6 text-sm">
                             <div>
-                              <span className="text-gray-400">Revenue: </span>
-                              <span className="text-green-400 font-medium">{formatCurrency(month.revenue)}</span>
+                              <span className="text-muted">Revenue: </span>
+                              <span className="accent-text font-medium">{formatCurrency(month.revenue)}</span>
                             </div>
                             <div>
-                              <span className="text-gray-400">Appointments: </span>
-                              <span className="text-blue-400 font-medium">{month.appointments}</span>
+                              <span className="text-muted">Appointments: </span>
+                              <span className="accent-text font-medium">{month.appointments}</span>
                             </div>
                             <div>
-                              <span className="text-gray-400">New Clients: </span>
-                              <span className="text-purple-400 font-medium">{month.newClients}</span>
+                              <span className="text-muted">New Clients: </span>
+                              <span className="accent-text font-medium">{month.newClients}</span>
                             </div>
                           </div>
                         </div>
@@ -278,12 +275,12 @@ export default function ReportsPage({ params }: PageProps) {
                     <CardContent>
                       <div className="space-y-3">
                         {reportData.topServices.map((service, index) => (
-                          <div key={index} className="flex items-center justify-between p-3 border border-gray-700 rounded">
+                          <div key={index} className="flex items-center justify-between p-3 border border-border rounded">
                             <div>
-                              <span className="font-medium text-gray-200">{service.name}</span>
-                              <div className="text-sm text-gray-400">{service.count} appointments</div>
+                              <span className="font-medium text-app">{service.name}</span>
+                              <div className="text-sm text-muted">{service.count} appointments</div>
                             </div>
-                            <div className="text-green-400 font-medium">
+                            <div className="accent-text font-medium">
                               {formatCurrency(service.revenue)}
                             </div>
                           </div>
@@ -303,19 +300,19 @@ export default function ReportsPage({ params }: PageProps) {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between p-3 border border-gray-700 rounded">
-                        <span className="font-medium text-gray-200">Returning Clients</span>
-                        <span className="text-green-400 font-medium">
+                      <div className="flex items-center justify-between p-3 border border-border rounded">
+                        <span className="font-medium text-app">Returning Clients</span>
+                        <span className="accent-text font-medium">
                           {reportData.clientRetention?.returning || 0}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between p-3 border border-gray-700 rounded">
-                        <span className="font-medium text-gray-200">New Clients</span>
-                        <span className="text-blue-400 font-medium">
+                      <div className="flex items-center justify-between p-3 border border-border rounded">
+                        <span className="font-medium text-app">New Clients</span>
+                        <span className="accent-text font-medium">
                           {reportData.clientRetention?.new || 0}
                         </span>
                       </div>
-                      <div className="text-sm text-gray-400 text-center">
+                      <div className="text-sm text-muted text-center">
                         Retention Rate: {
                           reportData.clientRetention
                             ? Math.round((reportData.clientRetention.returning / (reportData.clientRetention.returning + reportData.clientRetention.new)) * 100)
@@ -330,8 +327,8 @@ export default function ReportsPage({ params }: PageProps) {
           ) : (
             <div className="text-center py-12">
               <div className="text-6xl mb-4">📊</div>
-              <h3 className="text-xl font-semibold text-gray-100 mb-2">No data available</h3>
-              <p className="text-gray-400 mb-4">
+              <h3 className="text-xl font-semibold text-app mb-2">No data available</h3>
+              <p className="text-muted mb-4">
                 Complete some appointments to see your analytics
               </p>
             </div>

@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { useBusinessTheme } from '@/hooks/useBusinessTheme'
 
 interface PageProps {
   params: Promise<{ businessname: string }>
@@ -31,8 +30,6 @@ export default function ClientsPage({ params }: PageProps) {
   const [loadingClients, setLoadingClients] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
 
-  // Apply business theme
-  const { isLoading: themeLoading } = useBusinessTheme(user?.businessId)
 
   useEffect(() => {
     const getParams = async () => {
@@ -92,10 +89,10 @@ export default function ClientsPage({ params }: PageProps) {
     })
   }
 
-  if (isLoading || themeLoading) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      <div className="min-h-screen bg-app flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 accent-text"></div>
       </div>
     )
   }
@@ -105,7 +102,7 @@ export default function ClientsPage({ params }: PageProps) {
   }
 
   return (
-    <div className="min-h-screen theme-font" style={{ backgroundColor: 'var(--background, #0a0a0a)' }}>
+    <div className="min-h-screen bg-app">
       <div className="p-4">
         <div className="mx-auto max-w-6xl space-y-6">
           {/* Header */}
@@ -119,10 +116,10 @@ export default function ClientsPage({ params }: PageProps) {
               >
                 ← Back to Dashboard
               </Button>
-              <h1 className="text-3xl font-bold theme-primary" style={{ color: 'var(--theme-primary, #3b82f6)' }}>
+              <h1 className="text-3xl font-bold accent-text">
                 Client Management
               </h1>
-              <p className="text-gray-400 mt-1">View and manage your client database</p>
+              <p className="text-muted mt-1">View and manage your client database</p>
             </div>
           </div>
 
@@ -140,18 +137,18 @@ export default function ClientsPage({ params }: PageProps) {
             <Card>
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-400">{clients.length}</div>
-                  <div className="text-sm text-gray-400">Total Clients</div>
+                  <div className="text-2xl font-bold accent-text">{clients.length}</div>
+                  <div className="text-sm text-muted">Total Clients</div>
                 </div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-green-400">
+                  <div className="text-2xl font-bold accent-text">
                     {clients.filter(c => c.last_appointment && new Date(c.last_appointment).getTime() > Date.now() - 30 * 24 * 60 * 60 * 1000).length}
                   </div>
-                  <div className="text-sm text-gray-400">Active This Month</div>
+                  <div className="text-sm text-muted">Active This Month</div>
                 </div>
               </CardContent>
             </Card>
@@ -171,26 +168,26 @@ export default function ClientsPage({ params }: PageProps) {
                 <div className="space-y-4">
                   {[1, 2, 3, 4, 5].map((i) => (
                     <div key={i} className="animate-pulse">
-                      <div className="h-20 bg-gray-700 rounded"></div>
+                      <div className="h-20 bg-muted rounded"></div>
                     </div>
                   ))}
                 </div>
               ) : filteredClients.length > 0 ? (
                 <div className="space-y-4">
                   {filteredClients.map((client) => (
-                    <div key={client.id} className="border border-gray-700 rounded-lg p-4">
+                    <div key={client.id} className="border border-border rounded-lg p-4">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-lg font-semibold text-gray-100">
+                            <h3 className="text-lg font-semibold text-app">
                               {client.first_name} {client.last_name}
                             </h3>
-                            <span className="px-2 py-1 rounded text-xs font-medium bg-blue-900 text-blue-300">
+                            <span className="px-2 py-1 rounded text-xs font-medium bg-accent text-accent-foreground">
                               Client
                             </span>
                           </div>
 
-                          <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-4 text-sm text-gray-400">
+                          <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-4 text-sm text-muted">
                             <div>
                               <span className="font-medium">Phone:</span> {client.phone}
                             </div>
@@ -206,7 +203,7 @@ export default function ClientsPage({ params }: PageProps) {
                           </div>
 
                           {client.last_appointment && (
-                            <div className="mt-2 text-sm text-gray-400">
+                            <div className="mt-2 text-sm text-muted">
                               <span className="font-medium">Last visit:</span> {formatDate(client.last_appointment)}
                             </div>
                           )}
@@ -231,8 +228,8 @@ export default function ClientsPage({ params }: PageProps) {
               ) : searchTerm ? (
                 <div className="text-center py-12">
                   <div className="text-6xl mb-4">🔍</div>
-                  <h3 className="text-xl font-semibold text-gray-100 mb-2">No clients found</h3>
-                  <p className="text-gray-400 mb-4">
+                  <h3 className="text-xl font-semibold text-app mb-2">No clients found</h3>
+                  <p className="text-muted mb-4">
                     No clients match your search for "{searchTerm}"
                   </p>
                   <Button
@@ -245,8 +242,8 @@ export default function ClientsPage({ params }: PageProps) {
               ) : (
                 <div className="text-center py-12">
                   <div className="text-6xl mb-4">👥</div>
-                  <h3 className="text-xl font-semibold text-gray-100 mb-2">No clients yet</h3>
-                  <p className="text-gray-400 mb-4">
+                  <h3 className="text-xl font-semibold text-app mb-2">No clients yet</h3>
+                  <p className="text-muted mb-4">
                     Clients will appear here when they register through NFC cards or book appointments
                   </p>
                 </div>

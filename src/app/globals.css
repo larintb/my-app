@@ -1,79 +1,177 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-@import "tailwindcss";
+﻿@import "tailwindcss";
 
+/* Smooth scrolling for the entire page */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px; /* Account for fixed header */
+}
+
+/* Enhanced smooth scrolling with custom timing */
+* {
+  scroll-behavior: smooth;
+}
+
+/* Prevent scroll restoration on page refresh */
+html, body {
+  overscroll-behavior: none;
+}
+
+/* CSS Variables for unified theme system */
 :root {
-  --background: #0a0a0a;
-  --foreground: #f8fafc;
-  --card: #111827;
-  --card-foreground: #f8fafc;
-  --border: #374151;
-  --input: #1f2937;
-  --primary: #3b82f6;
-  --primary-foreground: #ffffff;
-  --secondary: #374151;
-  --secondary-foreground: #f8fafc;
-  --accent: #1f2937;
-  --accent-foreground: #f8fafc;
-  --muted: #374151;
-  --muted-foreground: #9ca3af;
+  /* Light theme colors */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  --border-color: #e2e8f0;
+  --accent-color: #1DB954;
+  --accent-hover: #1ed760;
+  --accent-text: #ffffff;
+  --danger-color: #ef4444;
+  --warning-color: #f59e0b;
+  --success-color: #10b981;
 
-  /* Business theme defaults - will be overridden by ThemeScript */
-  --theme-primary: #3b82f6;
-  --theme-secondary: #1f2937;
-  --theme-font-family: "Poppins", system-ui, sans-serif;
-  --text-color: #f8fafc;
+  /* App spacing and borders */
+  --border-radius: 0.5rem;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --font-sans: "Poppins", system-ui, sans-serif;
-  --font-mono: ui-monospace, "SF Mono", monospace;
+/* Dark theme */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-primary: #121212;
+    --bg-secondary: #1e1e1e;
+    --bg-tertiary: #282828;
+    --text-primary: #ffffff;
+    --text-secondary: #b3b3b3;
+    --text-muted: #6b7280;
+    --border-color: #404040;
+    --accent-color: #1DB954;
+    --accent-hover: #1ed760;
+    --accent-text: #121212;
+    --danger-color: #f87171;
+    --warning-color: #fbbf24;
+    --success-color: #34d399;
+  }
 }
 
+/* Default body styles */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: "Poppins", system-ui, sans-serif;
+  font-family: 'Poppins', sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Business theme utility classes - defined globally for instant application */
-.theme-primary {
-  color: var(--theme-primary);
+/* Home button hover effect */
+.home-button {
+  transition: all 0.3s ease;
 }
 
-.theme-secondary {
-  color: var(--theme-secondary);
+.home-button:hover {
+  opacity: 0.8;
+  transform: scale(1.02);
 }
 
-.theme-bg-primary {
-  background-color: var(--theme-primary);
+/* Unified theme utility classes */
+.accent-bg {
+  background-color: var(--accent-color);
+  color: var(--accent-text);
 }
 
-.theme-bg-secondary {
-  background-color: var(--theme-secondary);
+.accent-text {
+  color: var(--accent-color);
 }
 
-.theme-bg-primary-light {
-  background-color: rgb(from var(--theme-primary) r g b / 0.1);
+.hero-gradient-bg {
+  background: linear-gradient(120deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
 }
 
-.theme-border-primary {
-  border-color: var(--theme-primary);
+.feature-card {
+  background-color: var(--bg-secondary);
+  transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
-.theme-font {
-  font-family: var(--theme-font-family);
+.feature-card:hover {
+  background-color: var(--bg-tertiary);
+  transform: translateY(-5px);
+}
+
+.pricing-card-pro {
+  background-color: var(--accent-color);
+  color: var(--accent-text);
+}
+
+.form-input {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.form-input:focus {
+  border-color: var(--accent-color);
+  --tw-ring-color: var(--accent-color);
+}
+
+/* Additional utility classes for the new theme system */
+.bg-app {
+  background-color: var(--bg-primary);
+}
+
+.bg-card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.text-app {
+  color: var(--text-primary);
+}
+
+.text-muted {
+  color: var(--text-secondary);
+}
+
+.btn-primary {
+  background-color: var(--accent-color);
+  color: var(--accent-text);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  background-color: var(--accent-hover);
+}
+
+.btn-secondary {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 0.5rem 1rem;
+  border-radius: var(--border-radius);
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background-color: var(--bg-tertiary);
+}
+
+/* Spotify-inspired green color classes for consistency */
+.spotify-green {
+  background-color: #1DB954;
+}
+
+.spotify-green-text {
+  color: #1DB954;
+}
+
+.spotify-green:hover {
+  background-color: #1ed760;
 }

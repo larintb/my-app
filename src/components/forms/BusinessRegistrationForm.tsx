@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
+import { AddressAutocomplete, AddressDetails } from '@/components/ui/AddressAutocomplete'
 import { BusinessAdminRegistrationForm } from '@/types'
 
 interface BusinessRegistrationProps {
@@ -27,6 +28,7 @@ export function BusinessRegistrationForm({ token, onSuccess }: BusinessRegistrat
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<Partial<BusinessAdminRegistrationForm & { confirmPassword: string }>>({})
+  const [addressDetails, setAddressDetails] = useState<AddressDetails | null>(null)
 
   const handleInputChange = (field: keyof BusinessAdminRegistrationForm) => (
     e: React.ChangeEvent<HTMLInputElement>
@@ -35,6 +37,15 @@ export function BusinessRegistrationForm({ token, onSuccess }: BusinessRegistrat
     // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }))
+    }
+  }
+
+  const handleAddressSelect = (address: AddressDetails) => {
+    setAddressDetails(address)
+    setFormData(prev => ({ ...prev, address: address.fullAddress }))
+    // Clear address error when address is selected
+    if (errors.address) {
+      setErrors(prev => ({ ...prev, address: '' }))
     }
   }
 
@@ -84,7 +95,19 @@ export function BusinessRegistrationForm({ token, onSuccess }: BusinessRegistrat
           business_name: formData.business_name,
           owner_name: formData.owner_name,
           business_phone: formData.business_phone,
-          address: formData.address
+          address: formData.address,
+          // Additional address details (if available)
+          ...(addressDetails && {
+            address_details: {
+              place_id: addressDetails.placeId,
+              latitude: addressDetails.latitude,
+              longitude: addressDetails.longitude,
+              city: addressDetails.city,
+              state: addressDetails.state,
+              country: addressDetails.country,
+              postal_code: addressDetails.postalCode
+            }
+          })
         })
       })
 
@@ -234,14 +257,48 @@ export function BusinessRegistrationForm({ token, onSuccess }: BusinessRegistrat
                 required
               />
 
-              <Input
-                label="Business Address"
-                value={formData.address}
-                onChange={handleInputChange('address')}
-                error={errors.address}
-                helper="Full address including city and state"
-                required
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Business Address *
+                </label>
+                <AddressAutocomplete
+                  onAddressSelect={handleAddressSelect}
+                  placeholder="Comienza escribiendo la dirección de tu negocio..."
+                  initialValue={formData.address}
+                  disabled={isSubmitting}
+                  className="w-full"
+                  darkMode={true}
+                />
+                {errors.address && (
+                  <p className="mt-1 text-sm text-red-400">{errors.address}</p>
+                )}
+                <p className="mt-1 text-xs text-gray-500">
+                  Busca y selecciona tu dirección exacta. Soportamos Estados Unidos y México.
+                </p>
+
+                {/* Selected Address Details */}
+                {addressDetails && addressDetails.fullAddress && (
+                  <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-start">
+                      <svg className="w-5 h-5 text-green-600 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-green-800">Dirección Confirmada</p>
+                        <p className="text-sm text-green-700">{addressDetails.fullAddress}</p>
+                        {(addressDetails.city || addressDetails.state) && (
+                          <p className="text-xs text-green-600 mt-1">
+                            {addressDetails.city && `${addressDetails.city}, `}
+                            {addressDetails.state && addressDetails.state}
+                            {addressDetails.postalCode && ` ${addressDetails.postalCode}`}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* TODO: Add image upload for business_image */}
               <div className="rounded-lg border-2 border-dashed border-gray-300 p-6 text-center">

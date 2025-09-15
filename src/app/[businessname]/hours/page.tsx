@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { useBusinessTheme } from '@/hooks/useBusinessTheme'
 
 interface PageProps {
   params: Promise<{ businessname: string }>
@@ -32,8 +31,6 @@ export default function BusinessHoursPage({ params }: PageProps) {
   const [loadingHours, setLoadingHours] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
 
-  // Apply business theme
-  const { isLoading: themeLoading } = useBusinessTheme(user?.businessId)
 
   useEffect(() => {
     const getParams = async () => {
@@ -134,10 +131,10 @@ export default function BusinessHoursPage({ params }: PageProps) {
     return `${displayHour}:${minutes} ${ampm}`
   }
 
-  if (isLoading || themeLoading) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      <div className="min-h-screen bg-app flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 accent-text"></div>
       </div>
     )
   }
@@ -147,7 +144,7 @@ export default function BusinessHoursPage({ params }: PageProps) {
   }
 
   return (
-    <div className="min-h-screen theme-font" style={{ backgroundColor: 'var(--background, #0a0a0a)' }}>
+    <div className="min-h-screen bg-app">
       <div className="p-4">
         <div className="mx-auto max-w-4xl space-y-6">
           {/* Header */}
@@ -161,15 +158,15 @@ export default function BusinessHoursPage({ params }: PageProps) {
               >
                 ← Back to Dashboard
               </Button>
-              <h1 className="text-3xl font-bold theme-primary" style={{ color: 'var(--theme-primary, #3b82f6)' }}>
+              <h1 className="text-3xl font-bold accent-text">
                 Business Hours
               </h1>
-              <p className="text-gray-400 mt-1">Configure when your business is open</p>
+              <p className="text-muted mt-1">Configure when your business is open</p>
             </div>
             <Button
               onClick={saveBusinessHours}
               loading={isSaving}
-              className="theme-bg-primary"
+              className="btn-primary"
             >
               Save Hours
             </Button>
@@ -210,14 +207,14 @@ export default function BusinessHoursPage({ params }: PageProps) {
                 <div className="space-y-4">
                   {DAYS_OF_WEEK.map((_, index) => (
                     <div key={index} className="animate-pulse">
-                      <div className="h-16 bg-gray-700 rounded"></div>
+                      <div className="h-16 bg-muted rounded"></div>
                     </div>
                   ))}
                 </div>
               ) : (
                 <div className="space-y-4">
                   {businessHours.map((hour, index) => (
-                    <div key={hour.day_of_week} className="border border-gray-700 rounded-lg p-4">
+                    <div key={hour.day_of_week} className="border border-border rounded-lg p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                           <div className="w-24">
@@ -226,9 +223,9 @@ export default function BusinessHoursPage({ params }: PageProps) {
                                 type="checkbox"
                                 checked={hour.is_active}
                                 onChange={(e) => updateDayHours(hour.day_of_week, 'is_active', e.target.checked)}
-                                className="rounded border-gray-600 bg-gray-800 text-blue-600 focus:ring-blue-500"
+                                className="rounded border-border bg-input accent-text focus:ring-accent"
                               />
-                              <span className="font-medium text-gray-200">
+                              <span className="font-medium text-app">
                                 {DAYS_OF_WEEK[hour.day_of_week]}
                               </span>
                             </label>
@@ -237,32 +234,32 @@ export default function BusinessHoursPage({ params }: PageProps) {
                           {hour.is_active ? (
                             <div className="flex items-center gap-4">
                               <div className="flex items-center gap-2">
-                                <label className="text-sm text-gray-400">Open:</label>
+                                <label className="text-sm text-muted">Open:</label>
                                 <input
                                   type="time"
                                   value={hour.open_time}
                                   onChange={(e) => updateDayHours(hour.day_of_week, 'open_time', e.target.value)}
-                                  className="rounded border border-gray-600 bg-gray-800 px-3 py-1 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  className="rounded border border-border bg-input px-3 py-1 text-app focus:outline-none focus:ring-2 focus:ring-accent"
                                 />
                               </div>
-                              <span className="text-gray-400">to</span>
+                              <span className="text-muted">to</span>
                               <div className="flex items-center gap-2">
-                                <label className="text-sm text-gray-400">Close:</label>
+                                <label className="text-sm text-muted">Close:</label>
                                 <input
                                   type="time"
                                   value={hour.close_time}
                                   onChange={(e) => updateDayHours(hour.day_of_week, 'close_time', e.target.value)}
-                                  className="rounded border border-gray-600 bg-gray-800 px-3 py-1 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  className="rounded border border-border bg-input px-3 py-1 text-app focus:outline-none focus:ring-2 focus:ring-accent"
                                 />
                               </div>
                             </div>
                           ) : (
-                            <div className="text-gray-500 italic">Closed</div>
+                            <div className="text-muted italic">Closed</div>
                           )}
                         </div>
 
                         {hour.is_active && (
-                          <div className="text-sm text-gray-400">
+                          <div className="text-sm text-muted">
                             {formatTime(hour.open_time)} - {formatTime(hour.close_time)}
                           </div>
                         )}
@@ -285,11 +282,11 @@ export default function BusinessHoursPage({ params }: PageProps) {
             <CardContent>
               <div className="space-y-2">
                 {businessHours.map((hour) => (
-                  <div key={hour.day_of_week} className="flex justify-between items-center py-2 border-b border-gray-700 last:border-b-0">
-                    <span className="font-medium text-gray-200">
+                  <div key={hour.day_of_week} className="flex justify-between items-center py-2 border-b border-border last:border-b-0">
+                    <span className="font-medium text-app">
                       {DAYS_OF_WEEK[hour.day_of_week]}
                     </span>
-                    <span className={hour.is_active ? 'text-green-400' : 'text-red-400'}>
+                    <span className={hour.is_active ? 'accent-text' : 'text-muted'}>
                       {hour.is_active
                         ? `${formatTime(hour.open_time)} - ${formatTime(hour.close_time)}`
                         : 'Closed'
@@ -306,7 +303,7 @@ export default function BusinessHoursPage({ params }: PageProps) {
             <Button
               onClick={saveBusinessHours}
               loading={isSaving}
-              className="theme-bg-primary"
+              className="btn-primary"
               size="lg"
             >
               Save Business Hours
