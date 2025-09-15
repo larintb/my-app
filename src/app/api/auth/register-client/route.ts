@@ -1,0 +1,76 @@
+import { NextResponse } from 'next/server'
+import { validateToken, markTokenAsUsed } from '@/lib/db/tokens'
+import { createUser } from '@/lib/db/users'
+import { registerClientToBusiness } from '@/lib/db/clientBusinesses'
+
+export async function POST(request: Request) {
+  try {
+    const {
+      token,
+      first_name,
+      last_name,
+      phone
+    } = await request.json()
+
+    // Validation
+    if (!token || !first_name || !last_name || !phone) {
+      return NextResponse.json(
+        { error: 'All fields are required' },
+        { status: 400 }
+      )
+    }
+
+    // Validate token
+    const tokenData = await validateToken(token)
+    if (!tokenData || tokenData.type !== 'final_client') {
+      return NextResponse.json(
+        { error: 'Invalid or expired token' },
+        { status: 400 }
+      )
+    }
+
+    // Create user (no password needed for final clients)
+    const user = await createUser({
+      role: 'final_client',
+      phone,
+      first_name,
+      last_name
+    })
+
+    // Mark token as used
+    await markTokenAsUsed(tokenData.id, user.id)
+
+    // Register client to business if token has business_id
+    if (tokenData.business_id) {
+      await registerClientToBusiness(user.id, tokenData.business_id, tokenData.id)
+    }
+
+    return NextResponse.json({
+      success: true,
+      user: {
+        id: user.id,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        phone: user.phone,
+        role: user.role
+      },
+      message: 'Client account created successfully'
+    })
+
+  } catch (error: any) {
+    console.error('Client registration error:', error)
+
+    // Handle duplicate phone error if we add unique constraint later
+    if (error.code === '23505' && error.details?.includes('phone')) {
+      return NextResponse.json(
+        { error: 'Phone number already registered' },
+        { status: 409 }
+      )
+    }
+
+    return NextResponse.json(
+      { error: 'Registration failed' },
+      { status: 500 }
+    )
+  }
+}

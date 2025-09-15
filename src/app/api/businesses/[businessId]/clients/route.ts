@@ -1,0 +1,102 @@
+import { NextResponse } from 'next/server'
+import { supabaseAdmin } from '@/lib/supabase'
+
+interface RouteParams {
+  params: Promise<{
+    businessId: string
+  }>
+}
+
+// GET /api/businesses/[businessId]/clients
+export async function GET(request: Request, { params }: RouteParams) {
+  try {
+    const resolvedParams = await params
+    const businessId = resolvedParams.businessId
+
+    if (!businessId) {
+      return NextResponse.json(
+        { success: false, error: 'Business ID is required' },
+        { status: 400 }
+      )
+    }
+
+    // Get clients with their stats
+    const { data: clientsData, error: clientsError } = await supabaseAdmin
+      .from('client_businesses')
+      .select(`
+        client_id,
+        created_at,
+        users!client_businesses_client_id_fkey (
+          id,
+          first_name,
+          last_name,
+          phone,
+          created_at
+        )
+      `)
+      .eq('business_id', businessId)
+      .order('created_at', { ascending: false })
+
+    if (clientsError) {
+      console.error('Error fetching clients:', clientsError)
+      throw clientsError
+    }
+
+    // Get appointment stats for each client
+    const clientsWithStats = await Promise.all(
+      (clientsData || []).map(async (clientRel) => {
+        const client = clientRel.users
+
+        // Get appointment count and stats
+        const { data: appointments, error: appointmentsError } = await supabaseAdmin
+          .from('appointments')
+          .select(`
+            id,
+            appointment_date,
+            status,
+            services (price)
+          `)
+          .eq('business_id', businessId)
+          .eq('client_id', client.id)
+
+        if (appointmentsError) {
+          console.error('Error fetching client appointments:', appointmentsError)
+        }
+
+        const appointmentCount = appointments?.length || 0
+        const completedAppointments = appointments?.filter(a => a.status === 'completed') || []
+        const totalSpent = completedAppointments.reduce((sum, appointment) => {
+          return sum + (appointment.services?.price || 0)
+        }, 0)
+
+        // Get last appointment date
+        const lastAppointment = appointments && appointments.length > 0
+          ? appointments.sort((a, b) => new Date(b.appointment_date).getTime() - new Date(a.appointment_date).getTime())[0]
+          : null
+
+        return {
+          id: client.id,
+          first_name: client.first_name,
+          last_name: client.last_name,
+          phone: client.phone,
+          created_at: clientRel.created_at,
+          appointment_count: appointmentCount,
+          total_spent: totalSpent,
+          last_appointment: lastAppointment?.appointment_date || null
+        }
+      })
+    )
+
+    return NextResponse.json({
+      success: true,
+      clients: clientsWithStats
+    })
+
+  } catch (error) {
+    console.error('Error fetching clients:', error)
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
