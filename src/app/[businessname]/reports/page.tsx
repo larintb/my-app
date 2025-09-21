@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
+import { ClientThemeToggle } from '@/components/ui/ClientThemeToggle'
 
 interface PageProps {
   params: Promise<{ businessname: string }>
@@ -129,25 +130,26 @@ export default function ReportsPage({ params }: PageProps) {
                 size="sm"
                 className="mb-4"
               >
-                ← Back to Dashboard
+                ← Volver al Panel
               </Button>
               <h1 className="text-3xl font-bold accent-text">
-                Analytics & Reports
+                Análisis y Reportes
               </h1>
-              <p className="text-muted mt-1">Insights into your business performance</p>
+              <p className="text-muted mt-1">Información sobre el rendimiento de tu negocio</p>
             </div>
+            <ClientThemeToggle />
           </div>
 
           {/* Date Range Selector */}
           <Card>
             <CardContent className="pt-6">
               <div className="flex flex-wrap gap-2">
-                <span className="text-sm text-muted self-center mr-4">Time Period:</span>
+                <span className="text-sm text-muted self-center mr-4">Período de Tiempo:</span>
                 {[
-                  { key: '1month', label: 'Last Month' },
-                  { key: '3months', label: 'Last 3 Months' },
-                  { key: '6months', label: 'Last 6 Months' },
-                  { key: '1year', label: 'Last Year' }
+                  { key: '1month', label: 'Último Mes' },
+                  { key: '3months', label: 'Últimos 3 Meses' },
+                  { key: '6months', label: 'Últimos 6 Meses' },
+                  { key: '1year', label: 'Último Año' }
                 ].map((range) => (
                   <Button
                     key={range.key}

@@ -11,9 +11,13 @@ const Card = forwardRef<HTMLDivElement, CardProps>(({
   <div
     ref={ref}
     className={cn(
-      'rounded-xl border border-gray-700 bg-gray-800 p-6 shadow-lg',
+      'rounded-xl border p-6 shadow-lg',
       className
     )}
+    style={{
+      borderColor: 'var(--border-color)',
+      backgroundColor: 'var(--bg-secondary)',
+    }}
     {...props}
   >
     {children}
@@ -45,7 +49,8 @@ const CardTitle = forwardRef<HTMLHeadingElement, CardTitleProps>(({
 }, ref) => (
   <h3
     ref={ref}
-    className={cn('text-xl font-semibold leading-none tracking-tight text-gray-100', className)}
+    className={cn('text-xl font-semibold leading-none tracking-tight', className)}
+    style={{ color: 'var(--text-primary)' }}
     {...props}
   />
 ))
@@ -60,7 +65,8 @@ const CardDescription = forwardRef<HTMLParagraphElement, CardDescriptionProps>((
 }, ref) => (
   <p
     ref={ref}
-    className={cn('text-sm text-gray-400', className)}
+    className={cn('text-sm', className)}
+    style={{ color: 'var(--text-secondary)' }}
     {...props}
   />
 ))

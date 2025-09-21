@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 
 const poppins = Poppins({
   weight: ['400', '500', '600', '700', '800'],
@@ -13,18 +14,36 @@ export const metadata: Metadata = {
   description: "Conecta sin esfuerzo con tus clientes. Nuestras tarjetas NFC proporcionan acceso instantáneo a tus servicios, precios y agendamiento de citas con un solo toque.",
 };
 
+// Inline script to prevent theme flash
+const themeScript = `
+  (function() {
+    try {
+      var savedTheme = localStorage.getItem('theme') || 'light';
+      var systemPreference = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      var initialTheme = savedTheme || systemPreference;
+      document.documentElement.setAttribute('data-theme', initialTheme);
+    } catch (error) {
+      var systemPreference = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', systemPreference);
+    }
+  })();
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
+    <html lang="es" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
       </head>
-      <body className={`${poppins.variable} font-poppins antialiased bg-black text-white`}>
-        {children}
+      <body className={`${poppins.variable} font-poppins antialiased`} suppressHydrationWarning>
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

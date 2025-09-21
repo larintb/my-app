@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { ClientThemeToggle } from '@/components/ui/ClientThemeToggle'
 
 interface PageProps {
   params: Promise<{ businessname: string }>
@@ -82,7 +83,7 @@ export default function ClientsPage({ params }: PageProps) {
   )
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString('es-ES', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
@@ -114,13 +115,14 @@ export default function ClientsPage({ params }: PageProps) {
                 size="sm"
                 className="mb-4"
               >
-                ← Back to Dashboard
+                ← Volver al Panel
               </Button>
               <h1 className="text-3xl font-bold accent-text">
-                Client Management
+                Gestión de Clientes
               </h1>
-              <p className="text-muted mt-1">View and manage your client database</p>
+              <p className="text-muted mt-1">Ve y administra tu base de datos de clientes</p>
             </div>
+            <ClientThemeToggle />
           </div>
 
 
@@ -128,7 +130,7 @@ export default function ClientsPage({ params }: PageProps) {
           <div className="grid gap-4 md:grid-cols-4">
             <div className="md:col-span-2">
               <Input
-                placeholder="Search clients by name or phone..."
+                placeholder="Buscar clientes por nombre o teléfono..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full"
@@ -138,7 +140,7 @@ export default function ClientsPage({ params }: PageProps) {
               <CardContent className="pt-6">
                 <div className="text-center">
                   <div className="text-2xl font-bold accent-text">{clients.length}</div>
-                  <div className="text-sm text-muted">Total Clients</div>
+                  <div className="text-sm text-muted">Total de Clientes</div>
                 </div>
               </CardContent>
             </Card>
@@ -148,7 +150,7 @@ export default function ClientsPage({ params }: PageProps) {
                   <div className="text-2xl font-bold accent-text">
                     {clients.filter(c => c.last_appointment && new Date(c.last_appointment).getTime() > Date.now() - 30 * 24 * 60 * 60 * 1000).length}
                   </div>
-                  <div className="text-sm text-muted">Active This Month</div>
+                  <div className="text-sm text-muted">Activos Este Mes</div>
                 </div>
               </CardContent>
             </Card>
@@ -157,10 +159,10 @@ export default function ClientsPage({ params }: PageProps) {
           {/* Clients List */}
           <Card>
             <CardHeader>
-              <CardTitle>Your Clients</CardTitle>
+              <CardTitle>Tus Clientes</CardTitle>
               <CardDescription>
-                {filteredClients.length} client{filteredClients.length !== 1 ? 's' : ''}
-                {searchTerm && ` found for "${searchTerm}"`}
+                {filteredClients.length} cliente{filteredClients.length !== 1 ? 's' : ''}
+                {searchTerm && ` encontrado${filteredClients.length !== 1 ? 's' : ''} para "${searchTerm}"`}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -183,28 +185,28 @@ export default function ClientsPage({ params }: PageProps) {
                               {client.first_name} {client.last_name}
                             </h3>
                             <span className="px-2 py-1 rounded text-xs font-medium bg-accent text-accent-foreground">
-                              Client
+                              Cliente
                             </span>
                           </div>
 
                           <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-4 text-sm text-muted">
                             <div>
-                              <span className="font-medium">Phone:</span> {client.phone}
+                              <span className="font-medium">Teléfono:</span> {client.phone}
                             </div>
                             <div>
-                              <span className="font-medium">Joined:</span> {formatDate(client.created_at)}
+                              <span className="font-medium">Se unió:</span> {formatDate(client.created_at)}
                             </div>
                             <div>
-                              <span className="font-medium">Appointments:</span> {client.appointment_count || 0}
+                              <span className="font-medium">Citas:</span> {client.appointment_count || 0}
                             </div>
                             <div>
-                              <span className="font-medium">Total Spent:</span> ${client.total_spent?.toFixed(2) || '0.00'}
+                              <span className="font-medium">Total Gastado:</span> ${client.total_spent?.toFixed(2) || '0.00'}
                             </div>
                           </div>
 
                           {client.last_appointment && (
                             <div className="mt-2 text-sm text-muted">
-                              <span className="font-medium">Last visit:</span> {formatDate(client.last_appointment)}
+                              <span className="font-medium">Última visita:</span> {formatDate(client.last_appointment)}
                             </div>
                           )}
                         </div>
@@ -215,10 +217,10 @@ export default function ClientsPage({ params }: PageProps) {
                             size="sm"
                             onClick={() => {
                               // Navigate to client history/details
-                              alert(`Client details for ${client.first_name} ${client.last_name} - Feature coming soon!`)
+                              alert(`Detalles del cliente ${client.first_name} ${client.last_name} - ¡Función próximamente!`)
                             }}
                           >
-                            View History
+                            Ver Historial
                           </Button>
                         </div>
                       </div>
@@ -228,23 +230,23 @@ export default function ClientsPage({ params }: PageProps) {
               ) : searchTerm ? (
                 <div className="text-center py-12">
                   <div className="text-6xl mb-4">🔍</div>
-                  <h3 className="text-xl font-semibold text-app mb-2">No clients found</h3>
+                  <h3 className="text-xl font-semibold text-app mb-2">No se encontraron clientes</h3>
                   <p className="text-muted mb-4">
-                    No clients match your search for "{searchTerm}"
+                    No hay clientes que coincidan con tu búsqueda de "{searchTerm}"
                   </p>
                   <Button
                     variant="outline"
                     onClick={() => setSearchTerm('')}
                   >
-                    Clear Search
+                    Limpiar Búsqueda
                   </Button>
                 </div>
               ) : (
                 <div className="text-center py-12">
                   <div className="text-6xl mb-4">👥</div>
-                  <h3 className="text-xl font-semibold text-app mb-2">No clients yet</h3>
+                  <h3 className="text-xl font-semibold text-app mb-2">Aún no hay clientes</h3>
                   <p className="text-muted mb-4">
-                    Clients will appear here when they register through NFC cards or book appointments
+                    Los clientes aparecerán aquí cuando se registren a través de tarjetas NFC o reserven citas
                   </p>
                 </div>
               )}

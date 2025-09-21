@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
+import { ClientThemeToggle } from '@/components/ui/ClientThemeToggle'
 import { requireBusinessAdminAuth, clearBusinessAdminSession } from '@/utils/auth'
 
 interface PageProps {
@@ -78,6 +79,9 @@ export default function BusinessDashboard({ params }: PageProps) {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-app flex items-center justify-center">
+        <div className="absolute top-4 right-4">
+          <ClientThemeToggle />
+        </div>
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 accent-text"></div>
       </div>
     )
@@ -97,16 +101,19 @@ export default function BusinessDashboard({ params }: PageProps) {
               <h1 className="text-3xl font-bold accent-text">
                 {user.businessName}
               </h1>
-              <p className="text-muted mt-1">Business Dashboard</p>
-              <p className="text-sm text-app mt-1">Welcome back, {user.first_name}!</p>
+              <p className="text-muted mt-1">Panel de Control</p>
+              <p className="text-sm text-app mt-1">¡Bienvenido de vuelta, {user.first_name}!</p>
             </div>
-            <Button
-              onClick={handleLogout}
-              className="btn-secondary"
-              size="sm"
-            >
-              Logout
-            </Button>
+            <div className="flex items-center gap-4">
+              <ClientThemeToggle />
+              <Button
+                onClick={handleLogout}
+                className="btn-secondary"
+                size="sm"
+              >
+                Cerrar Sesión
+              </Button>
+            </div>
           </div>
 
           {/* Quick Stats */}
@@ -122,7 +129,7 @@ export default function BusinessDashboard({ params }: PageProps) {
                   ) : (
                     <>
                       <div className="text-2xl font-bold accent-text">{stats?.todayAppointments || 0}</div>
-                      <div className="text-sm text-muted">Today's Appointments</div>
+                      <div className="text-sm text-muted">Citas de Hoy</div>
                     </>
                   )}
                 </div>
@@ -140,7 +147,7 @@ export default function BusinessDashboard({ params }: PageProps) {
                   ) : (
                     <>
                       <div className="text-2xl font-bold accent-text">{stats?.totalClients || 0}</div>
-                      <div className="text-sm text-muted">Total Clients</div>
+                      <div className="text-sm text-muted">Total de Clientes</div>
                     </>
                   )}
                 </div>
@@ -158,7 +165,7 @@ export default function BusinessDashboard({ params }: PageProps) {
                   ) : (
                     <>
                       <div className="text-2xl font-bold accent-text">{stats?.servicesOffered || 0}</div>
-                      <div className="text-sm text-muted">Services Offered</div>
+                      <div className="text-sm text-muted">Servicios Ofrecidos</div>
                     </>
                   )}
                 </div>
@@ -176,7 +183,7 @@ export default function BusinessDashboard({ params }: PageProps) {
                   ) : (
                     <>
                       <div className="text-2xl font-bold accent-text">${stats?.todayRevenue?.toFixed(2) || '0.00'}</div>
-                      <div className="text-sm text-muted">Today's Revenue</div>
+                      <div className="text-sm text-muted">Ingresos de Hoy</div>
                     </>
                   )}
                 </div>
@@ -190,10 +197,10 @@ export default function BusinessDashboard({ params }: PageProps) {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  📅 Appointments
+                  📅 Citas
                 </CardTitle>
                 <CardDescription>
-                  Manage your appointments and schedule
+                  Administra tus citas y horarios
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -202,16 +209,16 @@ export default function BusinessDashboard({ params }: PageProps) {
                   size="lg"
                   onClick={() => router.push(`/${businessName}/appointments`)}
                 >
-                  View Today's Schedule
+                  Ver Agenda de Hoy
                 </Button>
                 <Button
                   className="w-full btn-secondary"
                   onClick={() => router.push(`/${businessName}/appointments`)}
                 >
-                  Manage Appointments
+                  Administrar Citas
                 </Button>
                 <Button className="w-full btn-secondary">
-                  Send Reminders
+                  Enviar Recordatorios
                 </Button>
               </CardContent>
             </Card>
@@ -220,10 +227,10 @@ export default function BusinessDashboard({ params }: PageProps) {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  ⚙️ Services & Pricing
+                  ⚙️ Servicios y Precios
                 </CardTitle>
                 <CardDescription>
-                  Configure your services and prices
+                  Configura tus servicios y precios
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -232,19 +239,19 @@ export default function BusinessDashboard({ params }: PageProps) {
                   size="lg"
                   onClick={() => router.push(`/${businessName}/services`)}
                 >
-                  Manage Services
+                  Administrar Servicios
                 </Button>
                 <Button
                   className="w-full btn-secondary"
                   onClick={() => router.push(`/${businessName}/services`)}
                 >
-                  Update Pricing
+                  Actualizar Precios
                 </Button>
                 <Button
                   className="w-full btn-secondary"
                   onClick={() => router.push(`/${businessName}/hours`)}
                 >
-                  Business Hours
+                  Horarios de Atención
                 </Button>
               </CardContent>
             </Card>
@@ -253,10 +260,10 @@ export default function BusinessDashboard({ params }: PageProps) {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  👥 Client Management
+                  👥 Gestión de Clientes
                 </CardTitle>
                 <CardDescription>
-                  View and manage your clients
+                  Ve y administra tus clientes
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -265,13 +272,13 @@ export default function BusinessDashboard({ params }: PageProps) {
                   size="lg"
                   onClick={() => router.push(`/${businessName}/clients`)}
                 >
-                  View All Clients
+                  Ver Todos los Clientes
                 </Button>
                 <Button
                   className="w-full btn-secondary"
                   onClick={() => router.push(`/${businessName}/clients`)}
                 >
-                  Client History
+                  Historial de Clientes
                 </Button>
               </CardContent>
             </Card>
@@ -280,10 +287,10 @@ export default function BusinessDashboard({ params }: PageProps) {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  🎨 Business Settings
+                  🎨 Configuraciones del Negocio
                 </CardTitle>
                 <CardDescription>
-                  Customize your business profile and information
+                  Personaliza el perfil e información de tu negocio
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -292,19 +299,19 @@ export default function BusinessDashboard({ params }: PageProps) {
                   size="lg"
                   onClick={() => router.push(`/${businessName}/settings`)}
                 >
-                  Business Information
+                  Información del Negocio
                 </Button>
                 <Button
                   className="w-full btn-secondary"
                   onClick={() => router.push(`/${businessName}/settings`)}
                 >
-                  Update Details
+                  Actualizar Detalles
                 </Button>
                 <Button
                   className="w-full btn-secondary"
                   onClick={() => router.push(`/${businessName}/reports`)}
                 >
-                  Analytics & Reports
+                  Análisis y Reportes
                 </Button>
               </CardContent>
             </Card>
@@ -313,9 +320,9 @@ export default function BusinessDashboard({ params }: PageProps) {
           {/* Recent Activity */}
           <Card>
             <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
+              <CardTitle>Actividad Reciente</CardTitle>
               <CardDescription>
-                Latest updates and activities in your business
+                Últimas actualizaciones y actividades en tu negocio
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -348,8 +355,8 @@ export default function BusinessDashboard({ params }: PageProps) {
               ) : (
                 <div className="text-center py-8">
                   <div className="text-4xl mb-2">📊</div>
-                  <p className="text-muted">No recent activity yet</p>
-                  <p className="text-xs text-muted mt-1">Activity will appear here as clients book appointments</p>
+                  <p className="text-muted">No hay actividad reciente aún</p>
+                  <p className="text-xs text-muted mt-1">Las actividades aparecerán aquí cuando los clientes reserven citas</p>
                 </div>
               )}
             </CardContent>

@@ -14,14 +14,25 @@ export async function GET(request: Request, { params }: RouteParams) {
 
     if (!businessId) {
       return NextResponse.json(
-        { success: false, error: 'Business ID is required' },
+        { success: false, error: 'Se requiere el ID del negocio' },
         { status: 400 }
       )
     }
 
     // Get recent appointments (last 24 hours)
-    const oneDayAgo = new Date()
-    oneDayAgo.setDate(oneDayAgo.getDate() - 1)
+    const now = new Date()
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+    
+    // Format as local date strings 
+    const nowYear = now.getFullYear()
+    const nowMonth = String(now.getMonth() + 1).padStart(2, '0')
+    const nowDay = String(now.getDate()).padStart(2, '0')
+    const todayLocal = `${nowYear}-${nowMonth}-${nowDay}`
+    
+    const dayAgoYear = oneDayAgo.getFullYear()
+    const dayAgoMonth = String(oneDayAgo.getMonth() + 1).padStart(2, '0')
+    const dayAgoDay = String(oneDayAgo.getDate()).padStart(2, '0')
+    const dayAgoLocal = `${dayAgoYear}-${dayAgoMonth}-${dayAgoDay}`
 
     const { data: recentAppointments, error: appointmentsError } = await supabaseAdmin
       .from('appointments')
@@ -41,7 +52,7 @@ export async function GET(request: Request, { params }: RouteParams) {
         )
       `)
       .eq('business_id', businessId)
-      .gte('created_at', oneDayAgo.toISOString())
+      .gte('appointment_date', dayAgoLocal)
       .order('created_at', { ascending: false })
       .limit(10)
 
@@ -51,8 +62,11 @@ export async function GET(request: Request, { params }: RouteParams) {
     }
 
     // Get recent client registrations (last 7 days)
-    const oneWeekAgo = new Date()
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+    const weekAgoYear = oneWeekAgo.getFullYear()
+    const weekAgoMonth = String(oneWeekAgo.getMonth() + 1).padStart(2, '0')
+    const weekAgoDay = String(oneWeekAgo.getDate()).padStart(2, '0')
+    const weekAgoLocal = `${weekAgoYear}-${weekAgoMonth}-${weekAgoDay}`
 
     const { data: recentClients, error: clientsError } = await supabaseAdmin
       .from('client_businesses')
@@ -86,27 +100,30 @@ export async function GET(request: Request, { params }: RouteParams) {
 
       let timeAgo = ''
       if (timeDiff < 60000) { // Less than 1 minute
-        timeAgo = 'Just now'
+        timeAgo = 'Ahora mismo'
       } else if (timeDiff < 3600000) { // Less than 1 hour
-        timeAgo = `${Math.floor(timeDiff / 60000)} min ago`
+        const minutes = Math.floor(timeDiff / 60000)
+        timeAgo = `hace ${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}`
       } else if (timeDiff < 86400000) { // Less than 24 hours
-        timeAgo = `${Math.floor(timeDiff / 3600000)} hour${Math.floor(timeDiff / 3600000) > 1 ? 's' : ''} ago`
+        const hours = Math.floor(timeDiff / 3600000)
+        timeAgo = `hace ${hours} ${hours === 1 ? 'hora' : 'horas'}`
       } else {
-        timeAgo = `${Math.floor(timeDiff / 86400000)} day${Math.floor(timeDiff / 86400000) > 1 ? 's' : ''} ago`
+        const days = Math.floor(timeDiff / 86400000)
+        timeAgo = `hace ${days} ${days === 1 ? 'día' : 'días'}`
       }
 
       if (appointment.status === 'completed') {
         activities.push({
           type: 'payment',
-          title: 'Payment received',
-          description: `$${appointment.services.price} from ${clientName} - ${serviceName}`,
+          title: 'Pago recibido',
+          description: `$${appointment.services.price} de ${clientName} - ${serviceName}`,
           timeAgo,
           timestamp: appointment.created_at
         })
       } else {
         activities.push({
           type: 'appointment',
-          title: 'New appointment booked',
+          title: 'Nueva cita reservada',
           description: `${clientName} - ${serviceName} - ${appointment.appointment_date} ${appointment.appointment_time}`,
           timeAgo,
           timestamp: appointment.created_at
@@ -122,17 +139,20 @@ export async function GET(request: Request, { params }: RouteParams) {
 
       let timeAgo = ''
       if (timeDiff < 3600000) { // Less than 1 hour
-        timeAgo = `${Math.floor(timeDiff / 60000)} min ago`
+        const minutes = Math.floor(timeDiff / 60000)
+        timeAgo = `hace ${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}`
       } else if (timeDiff < 86400000) { // Less than 24 hours
-        timeAgo = `${Math.floor(timeDiff / 3600000)} hour${Math.floor(timeDiff / 3600000) > 1 ? 's' : ''} ago`
+        const hours = Math.floor(timeDiff / 3600000)
+        timeAgo = `hace ${hours} ${hours === 1 ? 'hora' : 'horas'}`
       } else {
-        timeAgo = `${Math.floor(timeDiff / 86400000)} day${Math.floor(timeDiff / 86400000) > 1 ? 's' : ''} ago`
+        const days = Math.floor(timeDiff / 86400000)
+        timeAgo = `hace ${days} ${days === 1 ? 'día' : 'días'}`
       }
 
       activities.push({
         type: 'client',
-        title: 'New client registered',
-        description: `${clientName} via NFC card`,
+        title: 'Nuevo cliente registrado',
+        description: `${clientName} vía tarjeta NFC`,
         timeAgo,
         timestamp: client.created_at
       })
@@ -149,7 +169,7 @@ export async function GET(request: Request, { params }: RouteParams) {
   } catch (error) {
     console.error('Error fetching recent activity:', error)
     return NextResponse.json(
-      { success: false, error: 'Internal server error' },
+      { success: false, error: 'Error interno del servidor' },
       { status: 500 }
     )
   }

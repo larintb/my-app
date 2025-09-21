@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { ClientThemeToggle } from '@/components/ui/ClientThemeToggle'
 
 interface PageProps {
   params: Promise<{ businessname: string }>
@@ -93,9 +94,9 @@ export default function ServicesPage({ params }: PageProps) {
   const validateForm = () => {
     const errors: any = {}
 
-    if (!formData.name.trim()) errors.name = 'Service name is required'
-    if (!formData.price || parseFloat(formData.price) <= 0) errors.price = 'Valid price is required'
-    if (!formData.duration_minutes || parseInt(formData.duration_minutes) <= 0) errors.duration_minutes = 'Valid duration is required'
+    if (!formData.name.trim()) errors.name = 'El nombre del servicio es requerido'
+    if (!formData.price || parseFloat(formData.price) <= 0) errors.price = 'Se requiere un precio válido'
+    if (!formData.duration_minutes || parseInt(formData.duration_minutes) <= 0) errors.duration_minutes = 'Se requiere una duración válida'
 
     setFormErrors(errors)
     return Object.keys(errors).length === 0
@@ -132,13 +133,13 @@ export default function ServicesPage({ params }: PageProps) {
       if (data.success) {
         await loadServices(user.businessId)
         resetForm()
-        alert(`Service ${editingService ? 'updated' : 'created'} successfully!`)
+        alert(`¡Servicio ${editingService ? 'actualizado' : 'creado'} exitosamente!`)
       } else {
-        alert(`Failed to ${editingService ? 'update' : 'create'} service: ${data.error}`)
+        alert(`Error al ${editingService ? 'actualizar' : 'crear'} servicio: ${data.error}`)
       }
     } catch (error) {
       console.error('Error saving service:', error)
-      alert('Failed to save service')
+      alert('Error al guardar servicio')
     } finally {
       setIsSubmitting(false)
     }
@@ -168,7 +169,7 @@ export default function ServicesPage({ params }: PageProps) {
   }
 
   const deleteService = async (serviceId: string) => {
-    if (!confirm('Are you sure you want to delete this service?')) return
+    if (!confirm('¿Estás seguro de que quieres eliminar este servicio?')) return
 
     try {
       const response = await fetch(`/api/businesses/${user.businessId}/services/${serviceId}`, {
@@ -179,13 +180,13 @@ export default function ServicesPage({ params }: PageProps) {
 
       if (data.success) {
         await loadServices(user.businessId)
-        alert('Service deleted successfully!')
+        alert('¡Servicio eliminado exitosamente!')
       } else {
-        alert('Failed to delete service: ' + data.error)
+        alert('Error al eliminar servicio: ' + data.error)
       }
     } catch (error) {
       console.error('Error deleting service:', error)
-      alert('Failed to delete service')
+      alert('Error al eliminar servicio')
     }
   }
 
@@ -221,13 +222,16 @@ export default function ServicesPage({ params }: PageProps) {
               </h1>
               <p className="text-muted mt-1">Manage your services and pricing</p>
             </div>
-            <Button
-              onClick={() => setShowCreateForm(true)}
-              className="btn-primary"
-              disabled={showCreateForm}
-            >
-              + Add Service
-            </Button>
+            <div className="flex items-center gap-4">
+              <ClientThemeToggle />
+              <Button
+                onClick={() => setShowCreateForm(true)}
+                className="btn-primary"
+                disabled={showCreateForm}
+              >
+                + Add Service
+              </Button>
+            </div>
           </div>
 
           {/* Create/Edit Form */}

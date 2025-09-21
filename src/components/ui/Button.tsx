@@ -16,13 +16,13 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
   children,
   ...props
 }, ref) => {
-  const baseStyles = 'inline-flex items-center justify-center font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 rounded-lg'
+  const baseStyles = 'inline-flex items-center justify-center font-medium transition-all duration-300 transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:hover:scale-100 rounded-lg shadow-lg'
 
   const variants = {
-    primary: 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 focus-visible:ring-green-500',
-    secondary: 'bg-gray-700 text-white hover:bg-gray-600 focus-visible:ring-gray-500',
+    primary: 'primary-button text-black font-bold focus-visible:ring-green-500',
+    secondary: 'text-white hover:opacity-90 focus-visible:ring-green-500',
     outline: 'border border-green-500 bg-transparent hover:bg-green-50 text-green-600 hover:text-green-700',
-    ghost: 'hover:bg-gray-800 text-gray-100',
+    ghost: 'hover:opacity-90',
     danger: 'bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500'
   }
 
@@ -30,6 +30,27 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
     sm: 'h-9 px-3 text-sm',
     md: 'h-11 px-4 text-base',
     lg: 'h-12 px-6 text-lg'
+  }
+
+  const getButtonStyle = () => {
+    switch (variant) {
+      case 'primary':
+        return {
+          backgroundColor: '#1DB954',
+          color: 'black',
+        }
+      case 'secondary':
+        return {
+          backgroundColor: 'var(--bg-secondary)',
+          color: 'var(--text-primary)',
+        }
+      case 'ghost':
+        return {
+          color: 'var(--text-primary)',
+        }
+      default:
+        return {}
+    }
   }
 
   return (
@@ -40,6 +61,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
         sizes[size],
         className
       )}
+      style={getButtonStyle()}
       ref={ref}
       disabled={disabled || loading}
       {...props}

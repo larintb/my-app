@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { BusinessRegistrationForm } from '@/components/forms/BusinessRegistrationForm'
 import { Card, CardContent } from '@/components/ui/Card'
+import { ClientThemeToggle } from '@/components/ui/ClientThemeToggle'
 
 interface PageProps {
   params: Promise<{ token: string }>
@@ -53,7 +54,7 @@ export default function BusinessTokenPage({ params }: PageProps) {
 
   const handleRegistrationSuccess = (data: any) => {
     // Show success message and redirect to business dashboard
-    alert('Registration successful! Redirecting to your dashboard...')
+    alert('¡Registro exitoso! Redirigiendo a tu panel de control...')
 
     if (data.business?.slug) {
       router.push(`/${data.business.slug}/dashboard`)
@@ -64,12 +65,15 @@ export default function BusinessTokenPage({ params }: PageProps) {
 
   if (tokenStatus === 'loading') {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: 'var(--bg-primary)' }}>
+        <div className="absolute top-4 right-4">
+          <ClientThemeToggle />
+        </div>
+        <Card className="w-full max-w-md feature-card">
           <CardContent className="pt-6">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-              <p className="text-gray-400">Validating invitation token...</p>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto mb-4"></div>
+              <p style={{ color: 'var(--text-secondary)' }}>Validando token de invitación...</p>
             </div>
           </CardContent>
         </Card>
@@ -79,17 +83,20 @@ export default function BusinessTokenPage({ params }: PageProps) {
 
   if (tokenStatus === 'invalid') {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: 'var(--bg-primary)' }}>
+        <div className="absolute top-4 right-4">
+          <ClientThemeToggle />
+        </div>
+        <Card className="w-full max-w-md feature-card">
           <CardContent className="pt-6">
             <div className="text-center">
               <div className="text-6xl mb-4">❌</div>
-              <h2 className="text-xl font-semibold text-gray-100 mb-2">Invalid Token</h2>
-              <p className="text-gray-400 mb-4">
-                This invitation link is not valid or has expired.
+              <h2 className="text-xl font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Token Inválido</h2>
+              <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>
+                Este enlace de invitación no es válido o ha expirado.
               </p>
-              <p className="text-sm text-gray-500">
-                Please contact the administrator for a new invitation.
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                Por favor, contacta al administrador para obtener una nueva invitación.
               </p>
             </div>
           </CardContent>
@@ -100,20 +107,23 @@ export default function BusinessTokenPage({ params }: PageProps) {
 
   if (tokenStatus === 'used') {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: 'var(--bg-primary)' }}>
+        <div className="absolute top-4 right-4">
+          <ClientThemeToggle />
+        </div>
+        <Card className="w-full max-w-md feature-card">
           <CardContent className="pt-6">
             <div className="text-center">
               <div className="text-6xl mb-4">⚠️</div>
-              <h2 className="text-xl font-semibold text-gray-100 mb-2">Token Already Used</h2>
-              <p className="text-gray-400 mb-4">
-                This invitation has already been used to create an account.
+              <h2 className="text-xl font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Token Ya Utilizado</h2>
+              <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>
+                Esta invitación ya ha sido utilizada para crear una cuenta.
               </p>
               <button
                 onClick={() => router.push('/a/login')}
-                className="text-blue-400 hover:text-blue-300 font-medium"
+                className="spotify-green-text hover:opacity-80 font-medium transition-opacity duration-300"
               >
-                Go to Login →
+                Ir al Login →
               </button>
             </div>
           </CardContent>

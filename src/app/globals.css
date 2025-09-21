@@ -18,10 +18,11 @@ html, body {
 
 /* CSS Variables for unified theme system */
 :root {
-  /* Light theme colors */
+  /* Light theme colors (default) */
   --bg-primary: #ffffff;
   --bg-secondary: #f8fafc;
   --bg-tertiary: #f1f5f9;
+  --bg-card: #ffffff;
   --text-primary: #0f172a;
   --text-secondary: #64748b;
   --text-muted: #94a3b8;
@@ -33,6 +34,12 @@ html, body {
   --warning-color: #f59e0b;
   --success-color: #10b981;
 
+  /* Hero gradient for light mode */
+  --hero-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
+  --feature-card-bg: #ffffff;
+  --feature-card-hover-bg: #f8fafc;
+  --header-bg: rgba(255, 255, 255, 0.9);
+  
   /* App spacing and borders */
   --border-radius: 0.5rem;
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -41,22 +48,27 @@ html, body {
 }
 
 /* Dark theme */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg-primary: #121212;
-    --bg-secondary: #1e1e1e;
-    --bg-tertiary: #282828;
-    --text-primary: #ffffff;
-    --text-secondary: #b3b3b3;
-    --text-muted: #6b7280;
-    --border-color: #404040;
-    --accent-color: #1DB954;
-    --accent-hover: #1ed760;
-    --accent-text: #121212;
-    --danger-color: #f87171;
-    --warning-color: #fbbf24;
-    --success-color: #34d399;
-  }
+[data-theme="dark"] {
+  --bg-primary: #000000;
+  --bg-secondary: #111111;
+  --bg-tertiary: #1a1a1a;
+  --bg-card: #111111;
+  --text-primary: #ffffff;
+  --text-secondary: #d1d5db;
+  --text-muted: #9ca3af;
+  --border-color: #374151;
+  --accent-color: #1DB954;
+  --accent-hover: #1ed760;
+  --accent-text: #000000;
+  --danger-color: #f87171;
+  --warning-color: #fbbf24;
+  --success-color: #34d399;
+
+  /* Hero gradient for dark mode */
+  --hero-gradient: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #2d2d2d 100%);
+  --feature-card-bg: #111111;
+  --feature-card-hover-bg: #1a1a1a;
+  --header-bg: rgba(0, 0, 0, 0.9);
 }
 
 /* Default body styles */
@@ -65,6 +77,11 @@ body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Theme transition for smooth switching */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 /* Home button hover effect */
@@ -88,16 +105,17 @@ body {
 }
 
 .hero-gradient-bg {
-  background: linear-gradient(120deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+  background: var(--hero-gradient);
 }
 
 .feature-card {
-  background-color: var(--bg-secondary);
-  transition: background-color 0.3s ease, transform 0.3s ease;
+  background-color: var(--feature-card-bg);
+  border: 1px solid var(--border-color);
+  transition: background-color 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
 }
 
 .feature-card:hover {
-  background-color: var(--bg-tertiary);
+  background-color: var(--feature-card-hover-bg);
   transform: translateY(-5px);
 }
 
@@ -174,4 +192,8 @@ body {
 
 .spotify-green:hover {
   background-color: #1ed760;
+}
+
+.primary-button:hover {
+  background-color: #1ed760 !important;
 }

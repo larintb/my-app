@@ -36,13 +36,13 @@ export function BusinessLoginForm({ businessName, businessId, onSuccess }: Busin
     const newErrors: Partial<LoginForm> = {}
 
     if (!formData.email.trim()) {
-      newErrors.email = 'Email is required'
+      newErrors.email = 'El email es requerido'
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid'
+      newErrors.email = 'El email no es válido'
     }
 
     if (!formData.password) {
-      newErrors.password = 'Password is required'
+      newErrors.password = 'La contraseña es requerida'
     }
 
     setErrors(newErrors)
@@ -79,11 +79,11 @@ export function BusinessLoginForm({ businessName, businessId, onSuccess }: Busin
         }
         onSuccess(userData)
       } else {
-        setErrors({ general: data.error || 'Login failed. Please try again.' })
+        setErrors({ general: data.error || 'Error de inicio de sesión. Inténtalo de nuevo.' })
       }
     } catch (error) {
       console.error('Login error:', error)
-      setErrors({ general: 'An error occurred during login. Please try again.' })
+      setErrors({ general: 'Ocurrió un error durante el inicio de sesión. Inténtalo de nuevo.' })
     } finally {
       setIsSubmitting(false)
     }
@@ -99,14 +99,14 @@ export function BusinessLoginForm({ businessName, businessId, onSuccess }: Busin
             <h1 className="text-3xl font-bold accent-text">
               {businessName}
             </h1>
-            <p className="text-muted mt-2">Business Admin Login</p>
+            <p className="text-muted mt-2">Inicio de Sesión de Administrador</p>
           </div>
 
           <Card>
             <CardHeader>
-              <CardTitle>Welcome Back</CardTitle>
+              <CardTitle>Bienvenido de Vuelta</CardTitle>
               <CardDescription>
-                Sign in to your business dashboard
+                Inicia sesión en tu panel de administración
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -118,23 +118,23 @@ export function BusinessLoginForm({ businessName, businessId, onSuccess }: Busin
                 )}
 
                 <Input
-                  label="Email Address"
+                  label="Dirección de Email"
                   type="email"
                   value={formData.email}
                   onChange={handleInputChange('email')}
                   error={errors.email}
-                  placeholder="your-email@example.com"
+                  placeholder="tu-email@ejemplo.com"
                   required
                   autoFocus
                 />
 
                 <Input
-                  label="Password"
+                  label="Contraseña"
                   type="password"
                   value={formData.password}
                   onChange={handleInputChange('password')}
                   error={errors.password}
-                  placeholder="Enter your password"
+                  placeholder="Ingresa tu contraseña"
                   required
                 />
 
@@ -144,13 +144,13 @@ export function BusinessLoginForm({ businessName, businessId, onSuccess }: Busin
                   className="w-full mt-6 btn-primary"
                   size="lg"
                 >
-                  {isSubmitting ? 'Signing in...' : 'Sign In'}
+                  {isSubmitting ? 'Iniciando sesión...' : 'Iniciar Sesión'}
                 </Button>
               </form>
 
               <div className="mt-6 text-center">
                 <p className="text-xs text-muted">
-                  Need help? Contact support for assistance.
+                  ¿Necesitas ayuda? Contacta soporte para asistencia.
                 </p>
               </div>
             </CardContent>

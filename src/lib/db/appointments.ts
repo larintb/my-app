@@ -56,7 +56,12 @@ export async function getAppointmentsByBusinessId(businessId: string): Promise<A
 
 // Get today's appointments for a business
 export async function getTodaysAppointments(businessId: string): Promise<Appointment[]> {
-  const today = new Date().toISOString().split('T')[0]
+  // Use local date instead of UTC to match how appointments are created
+  const today = new Date()
+  const year = today.getFullYear()
+  const month = String(today.getMonth() + 1).padStart(2, '0')
+  const day = String(today.getDate()).padStart(2, '0')
+  const todayLocal = `${year}-${month}-${day}`
 
   const { data, error } = await supabaseAdmin
     .from('appointments')
@@ -76,7 +81,7 @@ export async function getTodaysAppointments(businessId: string): Promise<Appoint
       )
     `)
     .eq('business_id', businessId)
-    .eq('appointment_date', today)
+    .eq('appointment_date', todayLocal)
     .order('appointment_time', { ascending: true })
 
   if (error) {
@@ -129,15 +134,25 @@ export async function updateAppointmentStatus(
 // Get appointment statistics for dashboard
 export async function getAppointmentStats(businessId: string) {
   try {
-    const today = new Date().toISOString().split('T')[0]
-    const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]
+    // Use local date instead of UTC to match how appointments are created
+    const today = new Date()
+    const year = today.getFullYear()
+    const month = String(today.getMonth() + 1).padStart(2, '0')
+    const day = String(today.getDate()).padStart(2, '0')
+    const todayLocal = `${year}-${month}-${day}`
+    
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
+    const monthYear = startOfMonth.getFullYear()
+    const monthMonth = String(startOfMonth.getMonth() + 1).padStart(2, '0')
+    const monthDay = String(startOfMonth.getDate()).padStart(2, '0')
+    const startOfMonthLocal = `${monthYear}-${monthMonth}-${monthDay}`
 
     // Get today's appointments count
     const { data: todayData, error: todayError } = await supabaseAdmin
       .from('appointments')
       .select('id')
       .eq('business_id', businessId)
-      .eq('appointment_date', today)
+      .eq('appointment_date', todayLocal)
 
     if (todayError) throw todayError
 
@@ -146,7 +161,7 @@ export async function getAppointmentStats(businessId: string) {
       .from('appointments')
       .select('id')
       .eq('business_id', businessId)
-      .gte('appointment_date', startOfMonth)
+      .gte('appointment_date', startOfMonthLocal)
 
     if (monthError) throw monthError
 
@@ -156,7 +171,7 @@ export async function getAppointmentStats(businessId: string) {
       .select('id')
       .eq('business_id', businessId)
       .eq('status', 'pending')
-      .gte('appointment_date', today)
+      .gte('appointment_date', todayLocal)
 
     if (pendingError) throw pendingError
 
@@ -167,7 +182,7 @@ export async function getAppointmentStats(businessId: string) {
         services (price)
       `)
       .eq('business_id', businessId)
-      .eq('appointment_date', today)
+      .eq('appointment_date', todayLocal)
       .eq('status', 'completed')
 
     if (revenueError) throw revenueError

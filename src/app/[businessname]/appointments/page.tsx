@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
+import { ClientThemeToggle } from '@/components/ui/ClientThemeToggle'
 
 interface PageProps {
   params: Promise<{ businessname: string }>
@@ -222,13 +223,14 @@ export default function AppointmentsPage({ params }: PageProps) {
                 size="sm"
                 className="mb-4"
               >
-                ← Back to Dashboard
+                ← Volver al Panel
               </Button>
               <h1 className="text-3xl font-bold accent-text">
-                Appointments
+                Citas
               </h1>
-              <p className="text-muted mt-1">Manage your appointments and schedule</p>
+              <p className="text-muted mt-1">Administra tus citas y horarios</p>
             </div>
+            <ClientThemeToggle />
           </div>
 
           {/* Filters */}
@@ -236,10 +238,10 @@ export default function AppointmentsPage({ params }: PageProps) {
             <CardContent className="pt-6">
               <div className="flex flex-wrap gap-2">
                 {[
-                  { key: 'today', label: 'Today' },
-                  { key: 'all', label: 'All' },
-                  { key: 'pending', label: 'Pending' },
-                  { key: 'confirmed', label: 'Confirmed' }
+                  { key: 'today', label: 'Hoy' },
+                  { key: 'all', label: 'Todas' },
+                  { key: 'pending', label: 'Pendientes' },
+                  { key: 'confirmed', label: 'Confirmadas' }
                 ].map((filterOption) => (
                   <Button
                     key={filterOption.key}

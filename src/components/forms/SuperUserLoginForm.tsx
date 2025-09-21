@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
+import { ClientThemeToggle } from '@/components/ui/ClientThemeToggle'
 import { LoginForm } from '@/types'
 
 interface SuperUserLoginProps {
@@ -80,15 +81,18 @@ export function SuperUserLoginForm({ onSuccess }: SuperUserLoginProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: 'var(--bg-primary)' }}>
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
+          <div className="absolute top-4 right-4">
+            <ClientThemeToggle />
+          </div>
           <div className="text-6xl mb-4">🔐</div>
-          <h1 className="text-3xl font-bold text-gray-100">MyCard Admin</h1>
-          <p className="text-gray-400 mt-2">Superuser access only</p>
+          <h1 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>MyCard Admin</h1>
+          <p className="mt-2" style={{ color: 'var(--text-secondary)' }}>Superuser access only</p>
         </div>
 
-        <Card>
+        <Card className="feature-card">
           <CardHeader>
             <CardTitle>Admin Login</CardTitle>
             <CardDescription>
@@ -137,7 +141,7 @@ export function SuperUserLoginForm({ onSuccess }: SuperUserLoginProps) {
         </Card>
 
         <div className="mt-6 text-center">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
             🔒 Authorized personnel only. All access is logged.
           </p>
         </div>

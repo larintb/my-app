@@ -29,6 +29,13 @@ export interface InvitationToken {
   used_at?: string
 }
 
+export interface BusinessTheme {
+  primary_color?: string
+  secondary_color?: string
+  font_family?: string
+  custom_css?: string
+}
+
 export interface Business {
   id: string
   owner_id: string
@@ -37,6 +44,7 @@ export interface Business {
   phone: string
   address: string
   business_image_url?: string
+  theme_settings?: BusinessTheme
   created_at: string
   updated_at: string
 }

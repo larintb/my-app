@@ -41,6 +41,11 @@ interface BusinessHour {
   is_active: boolean
 }
 
+interface CheckinCode {
+  code: string
+  expires_at: string
+}
+
 interface ClientAppointmentInterfaceProps {
   business: Business
   services: Service[]
@@ -48,7 +53,7 @@ interface ClientAppointmentInterfaceProps {
   token: string
 }
 
-type ScreenType = 'home' | 'services' | 'calendar' | 'appointments' | 'business-info' | 'confirmation'
+type ScreenType = 'home' | 'services' | 'calendar' | 'appointments' | 'business-info' | 'confirmation' | 'checkin'
 
 export function ClientAppointmentInterface({
   business,
@@ -69,6 +74,10 @@ export function ClientAppointmentInterface({
   const [businessHours, setBusinessHours] = useState<BusinessHour[]>([])
   const [loadingHours, setLoadingHours] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [selectedAppointmentForCheckin, setSelectedAppointmentForCheckin] = useState<ClientAppointment | null>(null)
+  const [checkinCode, setCheckinCode] = useState<CheckinCode | null>(null)
+  const [checkinInput, setCheckinInput] = useState('')
+  const [checkinLoading, setCheckinLoading] = useState(false)
 
   // Helper function to get service data
   const getServiceData = (appointment: ClientAppointment) => {
@@ -150,6 +159,79 @@ export function ClientAppointmentInterface({
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleGenerateCheckinCode = async (appointment: ClientAppointment) => {
+    setCheckinLoading(true)
+    try {
+      const response = await fetch(`/api/appointments/${appointment.id}/checkin`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      const data = await response.json()
+      if (data.success) {
+        setCheckinCode({
+          code: data.code,
+          expires_at: data.expires_at
+        })
+        setSelectedAppointmentForCheckin(appointment)
+        setCurrentScreen('checkin')
+      } else {
+        alert('Error al generar código: ' + (data.error || 'Error desconocido'))
+      }
+    } catch (error) {
+      console.error('Error generating check-in code:', error)
+      alert('Error al generar código de check-in. Por favor intenta de nuevo.')
+    } finally {
+      setCheckinLoading(false)
+    }
+  }
+
+  const handleCheckin = async () => {
+    if (!selectedAppointmentForCheckin || !checkinInput) return
+
+    setCheckinLoading(true)
+    try {
+      const response = await fetch(`/api/appointments/${selectedAppointmentForCheckin.id}/checkin`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          code: checkinInput
+        })
+      })
+
+      const data = await response.json()
+      if (data.success) {
+        alert('¡Check-in exitoso! Tu cita ha sido confirmada.')
+        loadUserAppointments()
+        setCurrentScreen('appointments')
+        setCheckinCode(null)
+        setCheckinInput('')
+        setSelectedAppointmentForCheckin(null)
+      } else {
+        alert('Error en check-in: ' + (data.error || 'Error desconocido'))
+      }
+    } catch (error) {
+      console.error('Error processing check-in:', error)
+      alert('Error al procesar check-in. Por favor intenta de nuevo.')
+    } finally {
+      setCheckinLoading(false)
+    }
+  }
+
+  const isAppointmentToday = (appointment: ClientAppointment) => {
+    const today = new Date().toISOString().split('T')[0]
+    return appointment.appointment_date === today
+  }
+
+  const canGenerateCheckin = (appointment: ClientAppointment) => {
+    return appointment.status === 'confirmed' && isAppointmentToday(appointment)
   }
 
   const formatCurrency = (amount: number) => {
@@ -601,12 +683,42 @@ export function ClientAppointmentInterface({
                 </div>
               </div>
 
-              {/* Action button for pending appointments */}
+              {/* Action buttons */}
               {appointment.status === 'pending' && (
                 <div className="mt-6 pt-4 border-t border-gray-100">
                   <button className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-4 rounded-xl transition-all duration-200 active:scale-[0.98]">
                     Gestionar Cita
                   </button>
+                </div>
+              )}
+
+              {/* Check-in button for confirmed appointments on the same day */}
+              {canGenerateCheckin(appointment) && (
+                <div className="mt-6 pt-4 border-t border-gray-100">
+                  <button
+                    onClick={() => handleGenerateCheckinCode(appointment)}
+                    disabled={checkinLoading}
+                    className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-4 px-6 rounded-xl transition-all duration-200 active:scale-[0.98] flex items-center justify-center space-x-2"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>{checkinLoading ? 'Generando...' : 'Hacer Check-in'}</span>
+                  </button>
+                </div>
+              )}
+
+              {/* Show when checkin is available but not today */}
+              {appointment.status === 'confirmed' && !isAppointmentToday(appointment) && (
+                <div className="mt-6 pt-4 border-t border-gray-100">
+                  <div className="w-full bg-blue-50 text-blue-800 text-center py-3 px-4 rounded-xl border border-blue-200">
+                    <div className="flex items-center justify-center space-x-2">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="text-sm font-medium">Check-in disponible el día de la cita</span>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -741,6 +853,132 @@ export function ClientAppointmentInterface({
     </div>
   )
 
+  const renderCheckin = () => (
+    <div className="px-4 pb-6 bg-gradient-to-br from-gray-50 to-white min-h-screen">
+      {/* Header with back navigation */}
+      <div className="pt-6 pb-6">
+        <div className="flex items-center mb-4">
+          <button
+            onClick={() => setCurrentScreen('appointments')}
+            className="mr-4 w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors duration-200 active:scale-95"
+          >
+            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Check-in</h2>
+            <p className="text-gray-600">Confirma tu llegada al establecimiento</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Appointment info */}
+      {selectedAppointmentForCheckin && (
+        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-6 text-white mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <h3 className="font-bold text-xl mb-2">
+                {getServiceData(selectedAppointmentForCheckin)?.name || 'Servicio'}
+              </h3>
+              <div className="space-y-1 text-blue-100">
+                <div className="flex items-center">
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span>{parseDateString(selectedAppointmentForCheckin.appointment_date).toLocaleDateString('es-MX')}</span>
+                </div>
+                <div className="flex items-center">
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>{formatTime(selectedAppointmentForCheckin.appointment_time)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Check-in options */}
+      <div className="space-y-6">
+        {/* Generate code section */}
+        {checkinCode && (
+          <div className="bg-white rounded-2xl p-6 shadow-md border border-gray-100">
+            <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+              <svg className="w-6 h-6 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Tu Código de Check-in
+            </h3>
+
+            <div className="text-center bg-gray-50 rounded-xl p-8 mb-6">
+              <div className="text-4xl font-bold text-gray-900 tracking-widest mb-2">
+                {checkinCode.code}
+              </div>
+              <p className="text-sm text-gray-600">
+                Muestra este código al personal del establecimiento
+              </p>
+              <p className="text-xs text-gray-500 mt-2">
+                Expira: {new Date(checkinCode.expires_at).toLocaleTimeString('es-ES')}
+              </p>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+              <div className="flex items-start">
+                <svg className="w-5 h-5 text-blue-600 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div className="text-blue-800 text-sm">
+                  <p className="font-medium mb-1">¿Cómo hacer check-in?</p>
+                  <ul className="text-xs space-y-1">
+                    <li>• Muestra este código al personal</li>
+                    <li>• O ingresa el código manualmente abajo</li>
+                    <li>• El código expira en 30 minutos</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Manual check-in section */}
+        <div className="bg-white rounded-2xl p-6 shadow-md border border-gray-100">
+          <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+            <svg className="w-6 h-6 text-purple-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            Confirmar Check-in
+          </h3>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Código de Check-in
+              </label>
+              <input
+                type="text"
+                value={checkinInput}
+                onChange={(e) => setCheckinInput(e.target.value)}
+                placeholder="Ingresa tu código de 6 dígitos"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center text-lg font-mono tracking-widest"
+                maxLength={6}
+              />
+            </div>
+
+            <button
+              onClick={handleCheckin}
+              disabled={checkinLoading || checkinInput.length !== 6}
+              className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-4 px-6 rounded-xl transition-all duration-200 active:scale-[0.98] text-lg"
+            >
+              {checkinLoading ? 'Procesando...' : 'Confirmar Check-in'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 transition-all duration-300">
       {renderNavigation()}
@@ -754,6 +992,7 @@ export function ClientAppointmentInterface({
           {currentScreen === 'appointments' && renderAppointments()}
           {currentScreen === 'business-info' && renderBusinessInfo()}
           {currentScreen === 'confirmation' && renderConfirmation()}
+          {currentScreen === 'checkin' && renderCheckin()}
         </div>
       </div>
 

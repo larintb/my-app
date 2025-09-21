@@ -6,6 +6,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { AddressAutocomplete, AddressDetails } from '@/components/ui/AddressAutocomplete'
+import { ClientThemeToggle } from '@/components/ui/ClientThemeToggle'
 
 interface PageProps {
   params: Promise<{ businessname: string }>
@@ -113,10 +114,10 @@ export default function BusinessSettingsPage({ params }: PageProps) {
   const validateForm = () => {
     const errors: any = {}
 
-    if (!formData.business_name.trim()) errors.business_name = 'Business name is required'
-    if (!formData.owner_name.trim()) errors.owner_name = 'Owner name is required'
-    if (!formData.phone.trim()) errors.phone = 'Phone is required'
-    if (!formData.address.trim()) errors.address = 'Address is required'
+    if (!formData.business_name.trim()) errors.business_name = 'El nombre del negocio es requerido'
+    if (!formData.owner_name.trim()) errors.owner_name = 'El nombre del propietario es requerido'
+    if (!formData.phone.trim()) errors.phone = 'El teléfono es requerido'
+    if (!formData.address.trim()) errors.address = 'La dirección es requerida'
 
     setFormErrors(errors)
     return Object.keys(errors).length === 0
@@ -150,15 +151,15 @@ export default function BusinessSettingsPage({ params }: PageProps) {
       const data = await response.json()
 
       if (data.success) {
-        alert('Business settings saved successfully!')
+        alert('¡Configuraciones del negocio guardadas exitosamente!')
 
         await loadBusinessData(user.businessId)
       } else {
-        alert('Failed to save settings: ' + data.error)
+        alert('Error al guardar configuraciones: ' + data.error)
       }
     } catch (error) {
       console.error('Error saving business settings:', error)
-      alert('Failed to save settings')
+      alert('Error al guardar configuraciones')
     } finally {
       setIsSaving(false)
     }
@@ -188,20 +189,23 @@ export default function BusinessSettingsPage({ params }: PageProps) {
                 className="btn-secondary mb-4"
                 size="sm"
               >
-                ← Back to Dashboard
+                ← Volver al Panel
               </Button>
               <h1 className="text-3xl font-bold accent-text">
-                Business Settings
+                Configuraciones del Negocio
               </h1>
-              <p className="text-muted mt-1">Manage your business information</p>
+              <p className="text-muted mt-1">Administra la información de tu negocio</p>
             </div>
-            <Button
-              onClick={saveBusinessSettings}
-              loading={isSaving}
-              className="btn-primary"
-            >
-              Save Settings
-            </Button>
+            <div className="flex items-center gap-4">
+              <ClientThemeToggle />
+              <Button
+                onClick={saveBusinessSettings}
+                loading={isSaving}
+                className="btn-primary"
+              >
+                Guardar Configuraciones
+              </Button>
+            </div>
           </div>
 
           {loadingBusiness ? (

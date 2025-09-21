@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+import { ClientThemeToggle } from '@/components/ui/ClientThemeToggle'
 import { SuperUserLoginForm } from '@/components/forms/SuperUserLoginForm'
 
 export default function AdminDashboard() {
@@ -91,8 +92,8 @@ export default function AdminDashboard() {
   // CONDITIONAL RETURNS AFTER ALL HOOKS
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--bg-primary)' }}>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
       </div>
     )
   }
@@ -221,22 +222,25 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 p-4">
+    <div className="min-h-screen p-4" style={{ backgroundColor: 'var(--bg-primary)' }}>
       <div className="mx-auto max-w-4xl space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between p-6 rounded-xl feature-card">
           <div className="text-center flex-1">
-            <h1 className="text-3xl font-bold text-gray-100">MyCard Admin</h1>
-            <p className="mt-2 text-gray-400">Generate invitation tokens for businesses and clients</p>
-            <p className="text-sm text-blue-400 mt-1">Welcome, {user.first_name}!</p>
+            <h1 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>MyCard Admin</h1>
+            <p className="mt-2" style={{ color: 'var(--text-secondary)' }}>Generate invitation tokens for businesses and clients</p>
+            <p className="text-sm mt-1 spotify-green-text">Welcome, {user.first_name}!</p>
           </div>
-          <Button
-            onClick={handleLogout}
-            variant="outline"
-            size="sm"
-          >
-            Logout
-          </Button>
+          <div className="flex items-center gap-4">
+            <ClientThemeToggle />
+            <Button
+              onClick={handleLogout}
+              variant="outline"
+              size="sm"
+            >
+              Logout
+            </Button>
+          </div>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
@@ -262,14 +266,14 @@ export default function AdminDashboard() {
 
               {businessToken && (
                 <div className="space-y-3">
-                  <div className="rounded-lg bg-gray-700 p-3">
-                    <p className="text-sm font-medium text-gray-300">Token:</p>
-                    <p className="break-all font-mono text-sm text-gray-100">{businessToken}</p>
+                  <div className="rounded-lg p-3" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                    <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Token:</p>
+                    <p className="break-all font-mono text-sm" style={{ color: 'var(--text-primary)' }}>{businessToken}</p>
                   </div>
 
-                  <div className="rounded-lg bg-blue-950 p-3">
-                    <p className="text-sm font-medium text-blue-300">Invitation URL:</p>
-                    <p className="break-all text-sm text-blue-100">
+                  <div className="rounded-lg p-3" style={{ backgroundColor: 'var(--bg-tertiary)', border: '1px solid #1DB954' }}>
+                    <p className="text-sm font-medium spotify-green-text">Invitation URL:</p>
+                    <p className="break-all text-sm" style={{ color: 'var(--text-primary)' }}>
                       {window.location.origin}/a/{businessToken}
                     </p>
                   </div>
@@ -278,7 +282,7 @@ export default function AdminDashboard() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="flex-1"
+                      className="flex-1 transition-all duration-300 hover:border-green-500"
                       onClick={() => copyToClipboard(businessToken, 'Token')}
                     >
                       Copy Token
@@ -286,7 +290,7 @@ export default function AdminDashboard() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="flex-1"
+                      className="flex-1 transition-all duration-300 hover:border-green-500"
                       onClick={() => copyToClipboard(`${window.location.origin}/a/${businessToken}`, 'URL')}
                     >
                       Copy URL
@@ -310,18 +314,23 @@ export default function AdminDashboard() {
             <CardContent className="space-y-4">
               {/* Business Selection */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
                   Select Business *
                 </label>
                 {loadingData ? (
                   <div className="animate-pulse">
-                    <div className="h-10 bg-gray-700 rounded"></div>
+                    <div className="h-10 rounded" style={{ backgroundColor: 'var(--bg-secondary)' }}></div>
                   </div>
                 ) : businesses.length > 0 ? (
                   <select
                     value={selectedBusiness}
                     onChange={(e) => setSelectedBusiness(e.target.value)}
-                    className="w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-300"
+                    style={{ 
+                      backgroundColor: 'var(--bg-secondary)', 
+                      color: 'var(--text-primary)',
+                      border: '1px solid var(--border-color)'
+                    }}
                   >
                     <option value="">Choose a business...</option>
                     {businesses.map((business) => (
@@ -331,7 +340,11 @@ export default function AdminDashboard() {
                     ))}
                   </select>
                 ) : (
-                  <div className="rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-gray-400">
+                  <div className="rounded-md px-3 py-2" style={{ 
+                    backgroundColor: 'var(--bg-secondary)',
+                    color: 'var(--text-muted)',
+                    border: '1px solid var(--border-color)'
+                  }}>
                     No businesses registered yet
                   </div>
                 )}
@@ -364,16 +377,16 @@ export default function AdminDashboard() {
               {/* Generated Tokens Display */}
               {generatedTokens.length > 0 && (
                 <div className="space-y-3">
-                  <div className="rounded-lg bg-green-950 border border-green-600 p-4">
+                  <div className="rounded-lg p-4 feature-card" style={{ border: '1px solid #1DB954' }}>
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-semibold text-green-300">
+                      <h3 className="font-semibold spotify-green-text">
                         ✅ Generated {generatedTokens.length} Client Token{generatedTokens.length !== 1 ? 's' : ''}
                       </h3>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => setGeneratedTokens([])}
-                        className="text-green-300 border-green-600 hover:bg-green-900"
+                        className="transition-all duration-300 hover:border-green-500"
                       >
                         Clear
                       </Button>
@@ -381,16 +394,16 @@ export default function AdminDashboard() {
 
                     <div className="space-y-2 max-h-60 overflow-y-auto">
                       {generatedTokens.map((token, index) => (
-                        <div key={token} className="bg-gray-800 rounded p-3 border border-gray-600">
+                        <div key={token} className="rounded p-3 feature-card">
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs font-medium text-gray-400">
+                            <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
                               Token #{index + 1}
                             </span>
                             <div className="flex gap-1">
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="text-xs h-6 px-2"
+                                className="text-xs h-6 px-2 transition-all duration-300 hover:border-green-500"
                                 onClick={() => copyToClipboard(token, `Token #${index + 1}`)}
                               >
                                 Copy Token
@@ -398,7 +411,7 @@ export default function AdminDashboard() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="text-xs h-6 px-2"
+                                className="text-xs h-6 px-2 transition-all duration-300 hover:border-green-500"
                                 onClick={() => copyToClipboard(`${window.location.origin}/c/${token}`, `URL #${index + 1}`)}
                               >
                                 Copy URL
@@ -407,12 +420,12 @@ export default function AdminDashboard() {
                           </div>
                           <div className="space-y-1">
                             <div>
-                              <p className="text-xs text-gray-400">Token:</p>
-                              <p className="break-all font-mono text-xs text-gray-200">{token}</p>
+                              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Token:</p>
+                              <p className="break-all font-mono text-xs" style={{ color: 'var(--text-primary)' }}>{token}</p>
                             </div>
                             <div>
-                              <p className="text-xs text-gray-400">NFC URL:</p>
-                              <p className="break-all text-xs text-green-200">
+                              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>NFC URL:</p>
+                              <p className="break-all text-xs spotify-green-text">
                                 {window.location.origin}/c/{token}
                               </p>
                             </div>
@@ -421,8 +434,8 @@ export default function AdminDashboard() {
                       ))}
                     </div>
 
-                    <div className="mt-3 p-3 bg-yellow-950 rounded border border-yellow-600">
-                      <p className="text-xs text-yellow-300 text-center">
+                    <div className="mt-3 p-3 rounded" style={{ backgroundColor: 'var(--bg-tertiary)', border: '1px solid #f59e0b' }}>
+                      <p className="text-xs text-center" style={{ color: '#f59e0b' }}>
                         💡 Program these URLs into NFC cards/tags for your clients
                       </p>
                     </div>
@@ -431,7 +444,7 @@ export default function AdminDashboard() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="flex-1"
+                        className="flex-1 transition-all duration-300 hover:border-green-500"
                         onClick={() => copyToClipboard(generatedTokens.join('\n'), 'All Tokens')}
                       >
                         Copy All Tokens
@@ -439,7 +452,7 @@ export default function AdminDashboard() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="flex-1"
+                        className="flex-1 transition-all duration-300 hover:border-green-500"
                         onClick={() => copyToClipboard(
                           generatedTokens.map(token => `${window.location.origin}/c/${token}`).join('\n'),
                           'All URLs'
@@ -462,13 +475,13 @@ export default function AdminDashboard() {
               <div className="text-center">
                 {loadingData ? (
                   <div className="animate-pulse">
-                    <div className="h-8 w-12 bg-gray-700 rounded mx-auto mb-2"></div>
-                    <div className="h-4 w-20 bg-gray-700 rounded mx-auto"></div>
+                    <div className="h-8 w-12 rounded mx-auto mb-2" style={{ backgroundColor: 'var(--bg-secondary)' }}></div>
+                    <div className="h-4 w-20 rounded mx-auto" style={{ backgroundColor: 'var(--bg-secondary)' }}></div>
                   </div>
                 ) : (
                   <>
-                    <div className="text-2xl font-bold text-blue-400">{stats?.activeBusinesses || 0}</div>
-                    <div className="text-sm text-gray-400">Active Businesses</div>
+                    <div className="text-2xl font-bold spotify-green-text">{stats?.activeBusinesses || 0}</div>
+                    <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Active Businesses</div>
                   </>
                 )}
               </div>
@@ -480,13 +493,13 @@ export default function AdminDashboard() {
               <div className="text-center">
                 {loadingData ? (
                   <div className="animate-pulse">
-                    <div className="h-8 w-12 bg-gray-700 rounded mx-auto mb-2"></div>
-                    <div className="h-4 w-20 bg-gray-700 rounded mx-auto"></div>
+                    <div className="h-8 w-12 rounded mx-auto mb-2" style={{ backgroundColor: 'var(--bg-secondary)' }}></div>
+                    <div className="h-4 w-20 rounded mx-auto" style={{ backgroundColor: 'var(--bg-secondary)' }}></div>
                   </div>
                 ) : (
                   <>
-                    <div className="text-2xl font-bold text-green-400">{stats?.totalClients || 0}</div>
-                    <div className="text-sm text-gray-400">Total Clients</div>
+                    <div className="text-2xl font-bold" style={{ color: '#10b981' }}>{stats?.totalClients || 0}</div>
+                    <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Total Clients</div>
                   </>
                 )}
               </div>
@@ -498,13 +511,13 @@ export default function AdminDashboard() {
               <div className="text-center">
                 {loadingData ? (
                   <div className="animate-pulse">
-                    <div className="h-8 w-12 bg-gray-700 rounded mx-auto mb-2"></div>
-                    <div className="h-4 w-20 bg-gray-700 rounded mx-auto"></div>
+                    <div className="h-8 w-12 rounded mx-auto mb-2" style={{ backgroundColor: 'var(--bg-secondary)' }}></div>
+                    <div className="h-4 w-20 rounded mx-auto" style={{ backgroundColor: 'var(--bg-secondary)' }}></div>
                   </div>
                 ) : (
                   <>
-                    <div className="text-2xl font-bold text-purple-400">{stats?.activeTokens || 0}</div>
-                    <div className="text-sm text-gray-400">Active Tokens</div>
+                    <div className="text-2xl font-bold" style={{ color: '#8b5cf6' }}>{stats?.activeTokens || 0}</div>
+                    <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Active Tokens</div>
                   </>
                 )}
               </div>
@@ -516,13 +529,13 @@ export default function AdminDashboard() {
               <div className="text-center">
                 {loadingData ? (
                   <div className="animate-pulse">
-                    <div className="h-8 w-12 bg-gray-700 rounded mx-auto mb-2"></div>
-                    <div className="h-4 w-20 bg-gray-700 rounded mx-auto"></div>
+                    <div className="h-8 w-12 rounded mx-auto mb-2" style={{ backgroundColor: 'var(--bg-secondary)' }}></div>
+                    <div className="h-4 w-20 rounded mx-auto" style={{ backgroundColor: 'var(--bg-secondary)' }}></div>
                   </div>
                 ) : (
                   <>
-                    <div className="text-2xl font-bold text-yellow-400">{stats?.totalAppointments || 0}</div>
-                    <div className="text-sm text-gray-400">Total Appointments</div>
+                    <div className="text-2xl font-bold" style={{ color: '#f59e0b' }}>{stats?.totalAppointments || 0}</div>
+                    <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Total Appointments</div>
                   </>
                 )}
               </div>
@@ -531,7 +544,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Development Tools */}
-        <Card>
+        <Card className="feature-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               🛠️ Development Tools
@@ -544,12 +557,12 @@ export default function AdminDashboard() {
             <Button
               onClick={seedDemoData}
               variant="outline"
-              className="w-full"
+              className="w-full transition-all duration-300 hover:border-green-500"
               disabled={isGenerating}
             >
               🌱 Generate Demo Data
             </Button>
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs mt-2" style={{ color: 'var(--text-secondary)' }}>
               This will create sample services, clients, and appointments for existing businesses
             </p>
           </CardContent>

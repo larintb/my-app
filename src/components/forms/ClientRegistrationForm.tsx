@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
+import { ClientThemeToggle } from '@/components/ui/ClientThemeToggle'
 import { FinalClientRegistrationForm } from '@/types'
 
 interface ClientRegistrationProps {
@@ -92,27 +93,30 @@ export function ClientRegistrationForm({ token, businessName, onSuccess }: Clien
   }
 
   return (
-    <div className="min-h-screen theme-font p-4 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
+    <div className="min-h-screen theme-font p-4" style={{ backgroundColor: 'var(--bg-primary)' }}>
+      <div className="absolute top-4 right-4">
+        <ClientThemeToggle />
+      </div>
       <div className="mx-auto max-w-md">
         <div className="mb-8 text-center">
           <div className="text-6xl mb-4">🌱</div>
-          <h1 className="text-2xl font-bold text-gray-900">Welcome!</h1>
-          <p className="mt-2 text-gray-600">
-            You're registering for <span className="font-semibold text-green-600">{businessName}</span>
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>¡Bienvenido!</h1>
+          <p className="mt-2" style={{ color: 'var(--text-secondary)' }}>
+            Te estás registrando en <span className="font-semibold spotify-green-text">{businessName}</span>
           </p>
         </div>
 
-        <Card>
+        <Card className="feature-card">
           <CardHeader>
-            <CardTitle>Quick Registration</CardTitle>
+            <CardTitle>Registro Rápido</CardTitle>
             <CardDescription>
-              Just a few details to get you started
+              Solo algunos detalles para comenzar
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <Input
-                label="First Name"
+                label="Nombre"
                 value={formData.first_name}
                 onChange={handleInputChange('first_name')}
                 error={errors.first_name}
@@ -121,7 +125,7 @@ export function ClientRegistrationForm({ token, businessName, onSuccess }: Clien
               />
 
               <Input
-                label="Last Name"
+                label="Apellido"
                 value={formData.last_name}
                 onChange={handleInputChange('last_name')}
                 error={errors.last_name}
@@ -129,30 +133,30 @@ export function ClientRegistrationForm({ token, businessName, onSuccess }: Clien
               />
 
               <Input
-                label="Phone Number"
+                label="Número de Teléfono"
                 type="tel"
                 value={formData.phone}
                 onChange={handleInputChange('phone')}
                 error={errors.phone}
-                helper="We'll use this to contact you about your appointments"
+                helper="Usaremos esto para contactarte sobre tus citas"
                 required
               />
 
               <Button
                 type="submit"
                 loading={isSubmitting}
-                className="w-full mt-6 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-medium"
+                className="w-full mt-6"
                 size="lg"
               >
-                {isSubmitting ? 'Creating Account...' : 'Get Started'}
+                {isSubmitting ? 'Creando Cuenta...' : 'Comenzar'}
               </Button>
             </form>
           </CardContent>
         </Card>
 
         <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">
-            🔒 Your information is secure and will only be used by {businessName}
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+            🔒 Tu información es segura y solo será utilizada por {businessName}
           </p>
         </div>
       </div>

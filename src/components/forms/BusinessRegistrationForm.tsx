@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { AddressAutocomplete, AddressDetails } from '@/components/ui/AddressAutocomplete'
+import { ClientThemeToggle } from '@/components/ui/ClientThemeToggle'
 import { BusinessAdminRegistrationForm } from '@/types'
 
 interface BusinessRegistrationProps {
@@ -143,33 +144,36 @@ export function BusinessRegistrationForm({ token, onSuccess }: BusinessRegistrat
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 p-4">
+    <div className="min-h-screen p-4" style={{ backgroundColor: 'var(--bg-primary)' }}>
+      <div className="absolute top-4 right-4">
+        <ClientThemeToggle />
+      </div>
       <div className="mx-auto max-w-2xl">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-gray-100">Welcome to MyCard</h1>
-          <p className="mt-2 text-gray-400">Set up your business account to get started</p>
+          <h1 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>Bienvenido a MyCard</h1>
+          <p className="mt-2" style={{ color: 'var(--text-secondary)' }}>Configura tu cuenta de negocio para comenzar</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Personal Information */}
-          <Card>
+          <Card className="feature-card">
             <CardHeader>
-              <CardTitle>Personal Information</CardTitle>
+              <CardTitle>Información Personal</CardTitle>
               <CardDescription>
-                Your contact details and login credentials
+                Tus datos de contacto y credenciales de acceso
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <Input
-                  label="First Name"
+                  label="Nombre"
                   value={formData.first_name}
                   onChange={handleInputChange('first_name')}
                   error={errors.first_name}
                   required
                 />
                 <Input
-                  label="Last Name"
+                  label="Apellido"
                   value={formData.last_name}
                   onChange={handleInputChange('last_name')}
                   error={errors.last_name}
@@ -178,17 +182,17 @@ export function BusinessRegistrationForm({ token, onSuccess }: BusinessRegistrat
               </div>
 
               <Input
-                label="Email Address"
+                label="Correo Electrónico"
                 type="email"
                 value={formData.email}
                 onChange={handleInputChange('email')}
                 error={errors.email}
-                helper="This will be used for login"
+                helper="Este será usado para iniciar sesión"
                 required
               />
 
               <Input
-                label="Phone Number"
+                label="Número de Teléfono"
                 type="tel"
                 value={formData.phone}
                 onChange={handleInputChange('phone')}
@@ -198,7 +202,7 @@ export function BusinessRegistrationForm({ token, onSuccess }: BusinessRegistrat
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <Input
-                  label="Password"
+                  label="Contraseña"
                   type="password"
                   value={formData.password}
                   onChange={handleInputChange('password')}
@@ -206,7 +210,7 @@ export function BusinessRegistrationForm({ token, onSuccess }: BusinessRegistrat
                   required
                 />
                 <Input
-                  label="Confirm Password"
+                  label="Confirmar Contraseña"
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => {
@@ -223,16 +227,16 @@ export function BusinessRegistrationForm({ token, onSuccess }: BusinessRegistrat
           </Card>
 
           {/* Business Information */}
-          <Card>
+          <Card className="feature-card">
             <CardHeader>
-              <CardTitle>Business Information</CardTitle>
+              <CardTitle>Información del Negocio</CardTitle>
               <CardDescription>
-                Details about your business
+                Detalles sobre tu negocio
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <Input
-                label="Business Name"
+                label="Nombre del Negocio"
                 value={formData.business_name}
                 onChange={handleInputChange('business_name')}
                 error={errors.business_name}
@@ -240,16 +244,16 @@ export function BusinessRegistrationForm({ token, onSuccess }: BusinessRegistrat
               />
 
               <Input
-                label="Business Owner Name"
+                label="Nombre del Propietario"
                 value={formData.owner_name}
                 onChange={handleInputChange('owner_name')}
                 error={errors.owner_name}
-                helper="This can be different from your personal name"
+                helper="Puede ser diferente a tu nombre personal"
                 required
               />
 
               <Input
-                label="Business Phone"
+                label="Teléfono del Negocio"
                 type="tel"
                 value={formData.business_phone}
                 onChange={handleInputChange('business_phone')}
@@ -258,8 +262,8 @@ export function BusinessRegistrationForm({ token, onSuccess }: BusinessRegistrat
               />
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Business Address *
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+                  Dirección del Negocio *
                 </label>
                 <AddressAutocomplete
                   onAddressSelect={handleAddressSelect}
@@ -272,7 +276,7 @@ export function BusinessRegistrationForm({ token, onSuccess }: BusinessRegistrat
                 {errors.address && (
                   <p className="mt-1 text-sm text-red-400">{errors.address}</p>
                 )}
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs" style={{ color: 'var(--text-secondary)' }}>
                   Busca y selecciona tu dirección exacta. Soportamos Estados Unidos y México.
                 </p>
 
@@ -301,17 +305,17 @@ export function BusinessRegistrationForm({ token, onSuccess }: BusinessRegistrat
               </div>
 
               {/* TODO: Add image upload for business_image */}
-              <div className="rounded-lg border-2 border-dashed border-gray-300 p-6 text-center">
-                <div className="text-gray-600">
-                  <p className="text-sm">Business Photo (Optional)</p>
-                  <p className="text-xs text-gray-500 mt-1">Coming soon - you can add this later</p>
+              <div className="rounded-lg border-2 border-dashed p-6 text-center" style={{ borderColor: 'var(--border-color)' }}>
+                <div style={{ color: 'var(--text-secondary)' }}>
+                  <p className="text-sm">Foto del Negocio (Opcional)</p>
+                  <p className="text-xs mt-1">Próximamente - puedes agregar esto después</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           {/* Submit Button */}
-          <Card>
+          <Card className="feature-card">
             <CardContent className="pt-6">
               <Button
                 type="submit"
@@ -319,11 +323,11 @@ export function BusinessRegistrationForm({ token, onSuccess }: BusinessRegistrat
                 className="w-full"
                 size="lg"
               >
-                {isSubmitting ? 'Creating Account...' : 'Create Business Account'}
+                {isSubmitting ? 'Creando Cuenta...' : 'Crear Cuenta de Negocio'}
               </Button>
 
-              <p className="mt-4 text-center text-sm text-gray-600">
-                By creating an account, you agree to our terms of service and privacy policy.
+              <p className="mt-4 text-center text-sm" style={{ color: 'var(--text-secondary)' }}>
+                Al crear una cuenta, aceptas nuestros términos de servicio y política de privacidad.
               </p>
             </CardContent>
           </Card>

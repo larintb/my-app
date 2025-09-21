@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { BusinessLoginForm } from '@/components/forms/BusinessLoginForm'
 import { Card, CardContent } from '@/components/ui/Card'
+import { ClientThemeToggle } from '@/components/ui/ClientThemeToggle'
 import { setBusinessAdminSession } from '@/utils/auth'
 
 interface PageProps {
@@ -54,12 +55,15 @@ export default function BusinessLoginPage({ params }: PageProps) {
 
   if (loadingState === 'loading') {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: 'var(--bg-primary)' }}>
+        <div className="absolute top-4 right-4">
+          <ClientThemeToggle />
+        </div>
+        <Card className="w-full max-w-md feature-card">
           <CardContent className="pt-6">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-              <p className="text-gray-400">Loading business information...</p>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto mb-4"></div>
+              <p style={{ color: 'var(--text-secondary)' }}>Cargando información del negocio...</p>
             </div>
           </CardContent>
         </Card>
@@ -69,17 +73,20 @@ export default function BusinessLoginPage({ params }: PageProps) {
 
   if (loadingState === 'not_found') {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: 'var(--bg-primary)' }}>
+        <div className="absolute top-4 right-4">
+          <ClientThemeToggle />
+        </div>
+        <Card className="w-full max-w-md feature-card">
           <CardContent className="pt-6">
             <div className="text-center">
               <div className="text-6xl mb-4">🏢❌</div>
-              <h2 className="text-xl font-semibold text-gray-100 mb-2">Business Not Found</h2>
-              <p className="text-gray-400 mb-4">
-                No business found with the name "{businessName}"
+              <h2 className="text-xl font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Negocio No Encontrado</h2>
+              <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>
+                No se encontró ningún negocio con el nombre "{businessName}"
               </p>
-              <p className="text-sm text-gray-500">
-                Please check the URL or contact the business owner.
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                Por favor, verifica la URL o contacta al dueño del negocio.
               </p>
             </div>
           </CardContent>
