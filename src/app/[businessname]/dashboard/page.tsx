@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { ClientThemeToggle } from '@/components/ui/ClientThemeToggle'
-import { requireBusinessAdminAuth, clearBusinessAdminSession } from '@/utils/auth'
+import { requireBusinessAdminAuth, clearBusinessAdminSession, BusinessAdminUser } from '@/utils/auth'
+import { DashboardStats, ActivityItem } from '@/types'
 
 interface PageProps {
   params: Promise<{ businessname: string }>
@@ -14,33 +15,14 @@ interface PageProps {
 export default function BusinessDashboard({ params }: PageProps) {
   const router = useRouter()
   const [businessName, setBusinessName] = useState<string>('')
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<BusinessAdminUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [stats, setStats] = useState<any>(null)
-  const [recentActivity, setRecentActivity] = useState<any[]>([])
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([])
   const [loadingData, setLoadingData] = useState(true)
 
 
-  useEffect(() => {
-    const getParams = async () => {
-      const resolvedParams = await params
-      setBusinessName(decodeURIComponent(resolvedParams.businessname))
-      checkAuth()
-    }
-
-    getParams()
-  }, [params])
-
-  const checkAuth = () => {
-    const user = requireBusinessAdminAuth(businessName, router)
-    if (user) {
-      setUser(user)
-      loadDashboardData(user.businessId)
-    }
-    setIsLoading(false)
-  }
-
-  const loadDashboardData = async (businessId: string) => {
+  const loadDashboardData = useCallback(async (businessId: string) => {
     try {
       setLoadingData(true)
 
@@ -68,7 +50,26 @@ export default function BusinessDashboard({ params }: PageProps) {
     } finally {
       setLoadingData(false)
     }
-  }
+  }, [])
+
+  const checkAuth = useCallback(() => {
+    const user = requireBusinessAdminAuth(businessName, router)
+    if (user) {
+      setUser(user)
+      loadDashboardData(user.businessId)
+    }
+    setIsLoading(false)
+  }, [businessName, router, loadDashboardData])
+
+  useEffect(() => {
+    const getParams = async () => {
+      const resolvedParams = await params
+      setBusinessName(decodeURIComponent(resolvedParams.businessname))
+      checkAuth()
+    }
+
+    getParams()
+  }, [params, checkAuth])
 
   const handleLogout = () => {
     setUser(null)

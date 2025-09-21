@@ -37,7 +37,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       
       setThemeState(initialTheme);
       setMounted(true);
-    } catch (error) {
+    } catch {
       // Fallback for SSR
       setThemeState('light');
       setMounted(true);

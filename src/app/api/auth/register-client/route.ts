@@ -57,11 +57,12 @@ export async function POST(request: Request) {
       message: 'Client account created successfully'
     })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Client registration error:', error)
 
     // Handle duplicate phone error if we add unique constraint later
-    if (error.code === '23505' && error.details?.includes('phone')) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((error as any).code === '23505' && (error as any).details?.includes('phone')) {
       return NextResponse.json(
         { error: 'Phone number already registered' },
         { status: 409 }

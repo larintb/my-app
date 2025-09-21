@@ -5,12 +5,18 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { ClientThemeToggle } from '@/components/ui/ClientThemeToggle'
-import { FinalClientRegistrationForm } from '@/types'
+import { FinalClientRegistrationForm, User } from '@/types'
+
+interface ClientRegistrationSuccessData {
+  success: boolean
+  message: string
+  user: User
+}
 
 interface ClientRegistrationProps {
   token: string
   businessName: string
-  onSuccess: (data: any) => void
+  onSuccess: (data: ClientRegistrationSuccessData) => void
 }
 
 export function ClientRegistrationForm({ token, businessName, onSuccess }: ClientRegistrationProps) {

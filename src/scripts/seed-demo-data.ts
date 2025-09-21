@@ -1,6 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import { createService } from '@/lib/db/services'
-import bcrypt from 'bcryptjs'
 
 // Script to create demo data for testing the dashboard
 export async function seedDemoData() {
@@ -48,7 +47,7 @@ export async function seedDemoData() {
             ...service
           })
           console.log(`  ✅ Created service: ${service.name}`)
-        } catch (error) {
+        } catch {
           console.log(`  ⚠️  Service ${service.name} might already exist`)
         }
       }

@@ -49,7 +49,8 @@ export async function POST(request: Request) {
     }
 
     // Remove password from response
-    const { password_hash, ...userResponse } = user
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password_hash: _, ...userResponse } = user
 
     return NextResponse.json({
       success: true,

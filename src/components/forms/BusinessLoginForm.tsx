@@ -5,11 +5,12 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { LoginForm } from '@/types'
+import { BusinessAdminUser } from '@/utils/auth'
 
 interface BusinessLoginProps {
   businessName: string
   businessId: string
-  onSuccess: (user: any) => void
+  onSuccess: (user: BusinessAdminUser) => void
 }
 
 export function BusinessLoginForm({ businessName, businessId, onSuccess }: BusinessLoginProps) {

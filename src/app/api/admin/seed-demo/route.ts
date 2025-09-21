@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { seedDemoData } from '@/scripts/seed-demo-data'
 
-export async function POST(request: Request) {
+export async function POST() {
   try {
     // Optional: Add authentication check here to ensure only superusers can run this
     // const { userId } = await request.json()

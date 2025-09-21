@@ -113,3 +113,21 @@ export interface LoginForm {
   email: string
   password: string
 }
+
+// Dashboard Types
+export interface DashboardStats {
+  todayAppointments: number
+  totalClients: number
+  servicesOffered: number
+  todayRevenue: number
+  monthlyAppointments: number
+  pendingAppointments: number
+}
+
+export interface ActivityItem {
+  type: 'appointment' | 'payment' | 'client'
+  title: string
+  description: string
+  timeAgo: string
+  timestamp: string
+}

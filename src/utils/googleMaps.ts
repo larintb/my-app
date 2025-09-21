@@ -75,7 +75,7 @@ class GoogleMapsLoader {
   }
 
   isReady(): boolean {
-    return this.state.isLoaded && window.google && window.google.maps
+    return this.state.isLoaded && !!window.google && !!window.google.maps
   }
 }
 

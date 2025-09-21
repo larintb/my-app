@@ -6,11 +6,18 @@ import { Input } from '@/components/ui/Input'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { AddressAutocomplete, AddressDetails } from '@/components/ui/AddressAutocomplete'
 import { ClientThemeToggle } from '@/components/ui/ClientThemeToggle'
-import { BusinessAdminRegistrationForm } from '@/types'
+import { BusinessAdminRegistrationForm, User, Business } from '@/types'
+
+interface BusinessRegistrationSuccessData {
+  success: boolean
+  message: string
+  user: User
+  business: Business
+}
 
 interface BusinessRegistrationProps {
   token: string
-  onSuccess: (data: any) => void
+  onSuccess: (data: BusinessRegistrationSuccessData) => void
 }
 
 export function BusinessRegistrationForm({ token, onSuccess }: BusinessRegistrationProps) {

@@ -1,4 +1,4 @@
-import { supabase, supabaseAdmin } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 import { User, UserRole } from '@/types'
 
 export interface CreateUserData {
@@ -121,9 +121,15 @@ export async function getUserCounts() {
     return { superuser: 0, business_admin: 0, final_client: 0 }
   }
 
+  type UserRoleCounts = {
+    superuser: number
+    business_admin: number
+    final_client: number
+  }
+
   const counts = data.reduce(
-    (acc, user) => {
-      ;(acc as any)[user.role] = ((acc as any)[user.role] || 0) + 1
+    (acc: UserRoleCounts, user) => {
+      acc[user.role as keyof UserRoleCounts] = (acc[user.role as keyof UserRoleCounts] || 0) + 1
       return acc
     },
     { superuser: 0, business_admin: 0, final_client: 0 }

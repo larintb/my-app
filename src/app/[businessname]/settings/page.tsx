@@ -1,32 +1,33 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { AddressAutocomplete, AddressDetails } from '@/components/ui/AddressAutocomplete'
 import { ClientThemeToggle } from '@/components/ui/ClientThemeToggle'
+import { BusinessAdminUser } from '@/utils/auth'
 
 interface PageProps {
   params: Promise<{ businessname: string }>
 }
 
-interface BusinessData {
-  id: string
-  business_name: string
-  owner_name: string
-  phone: string
-  address: string
-  business_image_url?: string
+// BusinessData interface removed as it was unused
+
+interface FormErrors {
+  business_name?: string
+  owner_name?: string
+  phone?: string
+  address?: string
 }
 
 export default function BusinessSettingsPage({ params }: PageProps) {
   const router = useRouter()
   const [businessName, setBusinessName] = useState<string>('')
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<BusinessAdminUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [businessData, setBusinessData] = useState<BusinessData | null>(null)
+  // businessData state removed as it was unused
   const [loadingBusiness, setLoadingBusiness] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
 
@@ -38,46 +39,18 @@ export default function BusinessSettingsPage({ params }: PageProps) {
     address: '',
     business_image_url: ''
   })
-  const [formErrors, setFormErrors] = useState<any>({})
+  const [formErrors, setFormErrors] = useState<FormErrors>({})
   const [addressDetails, setAddressDetails] = useState<AddressDetails | null>(null)
 
 
 
-  useEffect(() => {
-    const getParams = async () => {
-      const resolvedParams = await params
-      setBusinessName(decodeURIComponent(resolvedParams.businessname))
-      checkAuth()
-    }
-
-    getParams()
-  }, [params])
-
-  const checkAuth = () => {
-    const savedUser = localStorage.getItem('businessAdmin')
-    if (savedUser) {
-      try {
-        const userData = JSON.parse(savedUser)
-        setUser(userData)
-        loadBusinessData(userData.businessId)
-      } catch (error) {
-        localStorage.removeItem('businessAdmin')
-        router.push(`/${businessName}/login`)
-      }
-    } else {
-      router.push(`/${businessName}/login`)
-    }
-    setIsLoading(false)
-  }
-
-  const loadBusinessData = async (businessId: string) => {
+  const loadBusinessData = useCallback(async (businessId: string) => {
     try {
       setLoadingBusiness(true)
       const response = await fetch(`/api/businesses/${businessId}`)
       const data = await response.json()
 
       if (data.success) {
-        setBusinessData(data.business)
         setFormData({
           business_name: data.business.business_name,
           owner_name: data.business.owner_name,
@@ -92,12 +65,39 @@ export default function BusinessSettingsPage({ params }: PageProps) {
     } finally {
       setLoadingBusiness(false)
     }
-  }
+  }, [])
+
+  const checkAuth = useCallback(() => {
+    const savedUser = localStorage.getItem('businessAdmin')
+    if (savedUser) {
+      try {
+        const userData = JSON.parse(savedUser)
+        setUser(userData)
+        loadBusinessData(userData.businessId)
+      } catch {
+        localStorage.removeItem('businessAdmin')
+        router.push(`/${businessName}/login`)
+      }
+    } else {
+      router.push(`/${businessName}/login`)
+    }
+    setIsLoading(false)
+  }, [businessName, router, loadBusinessData])
+
+  useEffect(() => {
+    const getParams = async () => {
+      const resolvedParams = await params
+      setBusinessName(decodeURIComponent(resolvedParams.businessname))
+      checkAuth()
+    }
+
+    getParams()
+  }, [params, checkAuth])
 
   const handleInputChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData(prev => ({ ...prev, [field]: e.target.value }))
-    if (formErrors[field]) {
-      setFormErrors((prev: any) => ({ ...prev, [field]: '' }))
+    if (formErrors[field as keyof FormErrors]) {
+      setFormErrors((prev) => ({ ...prev, [field as keyof FormErrors]: '' }))
     }
   }
 
@@ -107,12 +107,12 @@ export default function BusinessSettingsPage({ params }: PageProps) {
     setFormData(prev => ({ ...prev, address: address.fullAddress }))
     // Clear address error when address is selected
     if (formErrors.address) {
-      setFormErrors((prev: any) => ({ ...prev, address: '' }))
+      setFormErrors((prev) => ({ ...prev, address: '' }))
     }
   }
 
   const validateForm = () => {
-    const errors: any = {}
+    const errors: FormErrors = {}
 
     if (!formData.business_name.trim()) errors.business_name = 'El nombre del negocio es requerido'
     if (!formData.owner_name.trim()) errors.owner_name = 'El nombre del propietario es requerido'
@@ -125,6 +125,11 @@ export default function BusinessSettingsPage({ params }: PageProps) {
 
   const saveBusinessSettings = async () => {
     if (!validateForm()) return
+
+    if (!user?.businessId) {
+      alert('User not authenticated')
+      return
+    }
 
     setIsSaving(true)
     try {

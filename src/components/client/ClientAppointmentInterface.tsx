@@ -1,9 +1,8 @@
 ﻿'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Business, Service, User } from '@/types'
 import { DynamicCalendar } from './DynamicCalendar'
-import { QRCodeGenerator } from '../ui/QRCodeGenerator'
 import { GoogleMap } from '../ui/GoogleMap'
 import { Button } from '../ui/Button'
 
@@ -26,12 +25,7 @@ interface AppointmentSlot {
   time: string
 }
 
-interface CalendarSelection {
-  year: number | null
-  month: number | null
-  day: number | null
-  step: 'month' | 'day' | 'time'
-}
+// CalendarSelection interface removed as it was unused
 
 interface BusinessHour {
   id: string
@@ -65,12 +59,7 @@ export function ClientAppointmentInterface({
   const [appointments, setAppointments] = useState<ClientAppointment[]>([])
   const [selectedService, setSelectedService] = useState<Service | null>(null)
   const [selectedSlot, setSelectedSlot] = useState<AppointmentSlot | null>(null)
-  const [calendarSelection, setCalendarSelection] = useState<CalendarSelection>({
-    year: null,
-    month: null,
-    day: null,
-    step: 'month'
-  })
+  // calendarSelection state removed as it was unused
   const [businessHours, setBusinessHours] = useState<BusinessHour[]>([])
   const [loadingHours, setLoadingHours] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -90,12 +79,7 @@ export function ClientAppointmentInterface({
     return new Date(year, month - 1, day) // month is 0-indexed
   }
 
-  useEffect(() => {
-    loadUserAppointments()
-    loadBusinessHours()
-  }, [])
-
-  const loadUserAppointments = async () => {
+  const loadUserAppointments = useCallback(async () => {
     try {
       const response = await fetch(`/api/businesses/${business.id}/client-appointments?client_id=${user.id}`, {
         headers: {
@@ -109,9 +93,9 @@ export function ClientAppointmentInterface({
     } catch (error) {
       console.error('Error loading appointments:', error)
     }
-  }
+  }, [business.id, user.id, token])
 
-  const loadBusinessHours = async () => {
+  const loadBusinessHours = useCallback(async () => {
     setLoadingHours(true)
     try {
       const response = await fetch(`/api/businesses/${business.id}/hours`)
@@ -124,7 +108,12 @@ export function ClientAppointmentInterface({
     } finally {
       setLoadingHours(false)
     }
-  }
+  }, [business.id])
+
+  useEffect(() => {
+    loadUserAppointments()
+    loadBusinessHours()
+  }, [loadUserAppointments, loadBusinessHours])
 
   const handleBookAppointment = async () => {
     if (!selectedService || !selectedSlot) return

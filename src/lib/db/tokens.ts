@@ -1,5 +1,5 @@
-import { supabase, supabaseAdmin } from '@/lib/supabase'
-import { InvitationToken, TokenType, TokenStatus } from '@/types'
+import { supabaseAdmin } from '@/lib/supabase'
+import { InvitationToken, TokenType, TokenStatus, Business } from '@/types'
 
 export interface CreateTokenData {
   token: string
@@ -110,7 +110,7 @@ export function generateTokenString(type: TokenType): string {
 // Get token with business information (for client tokens)
 export async function getTokenWithBusiness(token: string): Promise<{
   token: InvitationToken
-  business: any
+  business: Business
 } | null> {
   // First get the token
   const tokenData = await getTokenByString(token)
@@ -140,12 +140,12 @@ export async function getTokenWithBusiness(token: string): Promise<{
 
   return {
     token: tokenData,
-    business: businessData
+    business: businessData as unknown as Business
   }
 }
 
 // Get user by token (for final clients using NFC)
-export async function getUserByToken(token: string): Promise<any | null> {
+export async function getUserByToken(token: string): Promise<{ id: string; first_name: string; last_name: string; phone: string; [key: string]: unknown } | null> {
   // Get token data regardless of status (could be used)
   const tokenData = await getTokenByString(token)
   if (!tokenData || !tokenData.used_by) {
@@ -199,11 +199,20 @@ export async function getTokenStats() {
     }
   }
 
+  type TokenStats = {
+    total: number
+    active: number
+    used: number
+    expired: number
+    business_admin: number
+    final_client: number
+  }
+
   const stats = data.reduce(
-    (acc, token) => {
+    (acc: TokenStats, token) => {
       acc.total++
-      ;(acc as any)[token.status]++
-      ;(acc as any)[token.type]++
+      acc[token.status as keyof TokenStats]++
+      acc[token.type as keyof TokenStats]++
       return acc
     },
     {

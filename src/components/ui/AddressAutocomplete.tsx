@@ -36,7 +36,8 @@ export function AddressAutocomplete({
   countries = ['us', 'mx'] // Por defecto USA y México
 }: AddressAutocompleteProps) {
   const inputRef = useRef<HTMLInputElement>(null)
-  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const autocompleteRef = useRef<any>(null)
   const [isLoaded, setIsLoaded] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [inputValue, setInputValue] = useState(initialValue)
@@ -135,7 +136,7 @@ export function AddressAutocomplete({
         window.google?.maps?.event?.clearInstanceListeners(autocompleteRef.current)
       }
     }
-  }, [onAddressSelect])
+  }, [onAddressSelect, countries])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value)
@@ -254,12 +255,28 @@ declare global {
     google: {
       maps: {
         places: {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           Autocomplete: new (
             input: HTMLInputElement,
-            options?: google.maps.places.AutocompleteOptions
-          ) => google.maps.places.Autocomplete
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            options?: any
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          ) => any
         }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        Geocoder: new () => any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        Map: new (element: HTMLElement, options?: any) => any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        Marker: new (options?: any) => any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        InfoWindow: new (options?: any) => any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        Size: new (width: number, height: number) => any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        Point: new (x: number, y: number) => any
         event?: {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           clearInstanceListeners: (instance: any) => void
         }
       }

@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase'
-import { InvitationToken, TokenType, User } from '@/types'
+import { InvitationToken, TokenType, User, Business } from '@/types'
 
 export class TokenAuthError extends Error {
   constructor(message: string, public code: string) {
@@ -119,7 +119,7 @@ export async function getUserByToken(token: string): Promise<User | null> {
 }
 
 // Get business associated with a final client token
-export async function getBusinessByToken(token: string): Promise<any | null> {
+export async function getBusinessByToken(token: string): Promise<Business | null> {
   try {
     const { data, error } = await supabase
       .from('invitation_tokens')
@@ -134,7 +134,7 @@ export async function getBusinessByToken(token: string): Promise<any | null> {
       .single()
 
     if (error || !data?.businesses) return null
-    return data.businesses
+    return data.businesses as unknown as Business
   } catch (error) {
     console.error('Error getting business by token:', error)
     return null

@@ -1,10 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { ClientRegistrationForm } from '@/components/forms/ClientRegistrationForm'
-import { BusinessLandingPage } from '@/components/layouts/BusinessLandingPage'
 import { ClientAppointmentInterface } from '@/components/client/ClientAppointmentInterface'
-import { Card, CardContent } from '@/components/ui/Card'
 import { useBusinessTheme } from '@/hooks/useBusinessTheme'
 import { Business, Service, User } from '@/types'
 
@@ -22,17 +20,22 @@ export default function ClientTokenPage({ params }: PageProps) {
   // Apply business theme
   const { isLoading: themeLoading } = useBusinessTheme(business?.id)
 
-  useEffect(() => {
-    const getParams = async () => {
-      const resolvedParams = await params
-      setToken(resolvedParams.token)
-      await validateTokenAndLoadData(resolvedParams.token)
+  const loadBusinessServices = useCallback(async (businessId: string) => {
+    try {
+      const response = await fetch(`/api/businesses/${businessId}/services`)
+      const data = await response.json()
+
+      if (data.success) {
+        // Only show active services
+        const activeServices = data.services.filter((service: Service) => service.is_active)
+        setServices(activeServices)
+      }
+    } catch (error) {
+      console.error('Error loading services:', error)
     }
+  }, [])
 
-    getParams()
-  }, [params])
-
-  const validateTokenAndLoadData = async (tokenValue: string) => {
+  const validateTokenAndLoadData = useCallback(async (tokenValue: string) => {
     try {
       const response = await fetch('/api/tokens/validate', {
         method: 'POST',
@@ -62,38 +65,24 @@ export default function ClientTokenPage({ params }: PageProps) {
       console.error('Token validation error:', error)
       setTokenStatus('invalid')
     }
-  }
+  }, [loadBusinessServices])
 
-  const loadBusinessServices = async (businessId: string) => {
-    try {
-      const response = await fetch(`/api/businesses/${businessId}/services`)
-      const data = await response.json()
-
-      if (data.success) {
-        // Only show active services
-        const activeServices = data.services.filter((service: Service) => service.is_active)
-        setServices(activeServices)
-      }
-    } catch (error) {
-      console.error('Error loading services:', error)
+  useEffect(() => {
+    const getParams = async () => {
+      const resolvedParams = await params
+      setToken(resolvedParams.token)
+      await validateTokenAndLoadData(resolvedParams.token)
     }
+
+    getParams()
+  }, [params, validateTokenAndLoadData])
+
+  const handleRegistrationSuccess = (data: { user: User }) => {
+    setUser(data.user)
+    setTokenStatus('registered')
   }
 
-  const handleRegistrationSuccess = (data: any) => {
-    if (data.user) {
-      setUser(data.user)
-      setTokenStatus('registered')
-    }
-  }
-
-  const handleBookAppointment = (serviceId: string) => {
-    const service = services.find(s => s.id === serviceId)
-    alert(`Booking appointment for: ${service?.name}\nThis feature is coming soon!`)
-  }
-
-  const handleViewSchedule = () => {
-    alert('Schedule view coming soon!')
-  }
+  // handleBookAppointment and handleViewSchedule functions removed as they were unused
 
   if (tokenStatus === 'loading' || themeLoading) {
     return (

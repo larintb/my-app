@@ -41,7 +41,7 @@ export function middleware(request: NextRequest) {
           const loginUrl = new URL(`/${businessName}/login`, request.url)
           return NextResponse.redirect(loginUrl)
         }
-      } catch (error) {
+      } catch {
         // Invalid cookie format
         const loginUrl = new URL(`/${businessName}/login`, request.url)
         const response = NextResponse.redirect(loginUrl)

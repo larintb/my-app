@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createAppointment, getAppointmentsByBusinessId } from '@/lib/db/appointments'
+import { createAppointment } from '@/lib/db/appointments'
 import { supabaseAdmin } from '@/lib/supabase'
 
 interface RouteParams {

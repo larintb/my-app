@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 
 // GET /api/admin/businesses - Get all businesses for admin
-export async function GET(request: Request) {
+export async function GET() {
   try {
     // Get all businesses with basic info
     const { data: businesses, error } = await supabaseAdmin

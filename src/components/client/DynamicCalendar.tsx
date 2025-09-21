@@ -1,8 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 interface TimeSlot {
+  time: string
+  available: boolean
+}
+
+interface AvailableSlotResponse {
   time: string
   available: boolean
 }
@@ -36,32 +41,32 @@ export function DynamicCalendar({ businessId, onTimeSlotSelected }: DynamicCalen
     return slots
   }
 
-  const loadAvailableSlots = async (date: string) => {
+  const loadAvailableSlots = useCallback(async (date: string) => {
     setLoadingSlots(true)
     try {
       const response = await fetch(`/api/businesses/${businessId}/available-slots?date=${date}`)
       const data = await response.json()
-      
+
       if (data.success) {
-        setAvailableSlots(data.slots.map((slot: any) => ({
+        setAvailableSlots(data.slots.map((slot: AvailableSlotResponse) => ({
           time: slot.time,
           available: slot.available
         })))
       } else {
         setAvailableSlots(generateDefaultTimeSlots())
       }
-    } catch (error) {
+    } catch {
       setAvailableSlots(generateDefaultTimeSlots())
     } finally {
       setLoadingSlots(false)
     }
-  }
+  }, [businessId])
 
   useEffect(() => {
     if (selectedDate) {
       loadAvailableSlots(selectedDate)
     }
-  }, [selectedDate, businessId])
+  }, [selectedDate, loadAvailableSlots])
 
   const formatDate = (date: Date) => {
     const year = date.getFullYear()

@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { BusinessRegistrationForm } from '@/components/forms/BusinessRegistrationForm'
 import { Card, CardContent } from '@/components/ui/Card'
 import { ClientThemeToggle } from '@/components/ui/ClientThemeToggle'
+import { Business, User } from '@/types'
 
 interface PageProps {
   params: Promise<{ token: string }>
@@ -15,17 +16,7 @@ export default function BusinessTokenPage({ params }: PageProps) {
   const [token, setToken] = useState<string>('')
   const [tokenStatus, setTokenStatus] = useState<'loading' | 'valid' | 'invalid' | 'used'>('loading')
 
-  useEffect(() => {
-    const getParams = async () => {
-      const resolvedParams = await params
-      setToken(resolvedParams.token)
-      await validateToken(resolvedParams.token)
-    }
-
-    getParams()
-  }, [params])
-
-  const validateToken = async (tokenValue: string) => {
+  const validateToken = useCallback(async (tokenValue: string) => {
     try {
       const response = await fetch('/api/tokens/validate', {
         method: 'POST',
@@ -50,14 +41,26 @@ export default function BusinessTokenPage({ params }: PageProps) {
       console.error('Token validation error:', error)
       setTokenStatus('invalid')
     }
-  }
+  }, [])
 
-  const handleRegistrationSuccess = (data: any) => {
+  useEffect(() => {
+    const getParams = async () => {
+      const resolvedParams = await params
+      setToken(resolvedParams.token)
+      await validateToken(resolvedParams.token)
+    }
+
+    getParams()
+  }, [params, validateToken])
+
+  const handleRegistrationSuccess = (data: { business?: Business, user?: User }) => {
     // Show success message and redirect to business dashboard
     alert('¡Registro exitoso! Redirigiendo a tu panel de control...')
 
-    if (data.business?.slug) {
-      router.push(`/${data.business.slug}/dashboard`)
+    if (data.business?.business_name) {
+      // Use business_name to create the slug
+      const slug = data.business.business_name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+      router.push(`/${slug}/dashboard`)
     } else {
       router.push('/a/admin')
     }

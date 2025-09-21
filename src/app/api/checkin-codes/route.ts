@@ -34,7 +34,6 @@ export async function POST(request: NextRequest) {
 
     // Verificar que la cita es de hoy o en el futuro cercano (próximos 7 días)
     const today = new Date()
-    const appointmentDate = new Date(appointment.appointment_date)
     const todayString = today.toISOString().split('T')[0]
     const maxDate = new Date(today)
     maxDate.setDate(today.getDate() + 7)

@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
 import { ClientThemeToggle } from '@/components/ui/ClientThemeToggle'
+import { BusinessAdminUser } from '@/utils/auth'
 
 interface PageProps {
   params: Promise<{ businessname: string }>
@@ -26,23 +26,19 @@ const DAYS_OF_WEEK = [
 export default function BusinessHoursPage({ params }: PageProps) {
   const router = useRouter()
   const [businessName, setBusinessName] = useState<string>('')
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<BusinessAdminUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [businessHours, setBusinessHours] = useState<BusinessHour[]>([])
   const [loadingHours, setLoadingHours] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
 
-  // Simple time formatter - no complex validation
-  const formatTimeForDisplay = (timeStr: string): string => {
-    if (!timeStr) return '09:00'
-    return timeStr
-  }
+  // Note: formatTimeForDisplay function removed as it was unused
 
   // Generate time options for dropdowns in 24-hour format
   const generateTimeOptions = () => {
     const times = []
     for (let hour = 1; hour < 24; hour++) { // Start from 1 to avoid midnight
-      for (let minute of ['00', '30']) {
+      for (const minute of ['00', '30']) {
         const timeStr = `${hour.toString().padStart(2, '0')}:${minute}`
         times.push({ value: timeStr, label: timeStr }) // Use 24-hour format for both value and label
       }
@@ -52,18 +48,23 @@ export default function BusinessHoursPage({ params }: PageProps) {
 
   const timeOptions = generateTimeOptions()
 
-  useEffect(() => {
-    const getParams = async () => {
-      const resolvedParams = await params
-      const name = decodeURIComponent(resolvedParams.businessname)
-      setBusinessName(name)
-      checkAuth()
+  const loadBusinessHours = useCallback(async (businessId: string) => {
+    try {
+      setLoadingHours(true)
+      const response = await fetch(`/api/businesses/${businessId}/hours`)
+      const data = await response.json()
+
+      if (data.success) {
+        setBusinessHours(data.hours)
+      }
+    } catch (error) {
+      console.error('Error loading business hours:', error)
+    } finally {
+      setLoadingHours(false)
     }
+  }, [])
 
-    getParams()
-  }, [params])
-
-  const checkAuth = () => {
+  const checkAuth = useCallback(() => {
     const savedUser = localStorage.getItem('businessAdmin')
     console.log('Checking auth, savedUser:', !!savedUser)
 
@@ -92,98 +93,20 @@ export default function BusinessHoursPage({ params }: PageProps) {
       router.push(`/${businessName}/login`)
     }
     setIsLoading(false)
-  }
+  }, [businessName, router, loadBusinessHours])
 
-  const loadBusinessHours = async (businessId: string) => {
-    try {
-      setLoadingHours(true)
-      console.log('Loading business hours for businessId:', businessId)
-
-      const response = await fetch(`/api/businesses/${businessId}/hours`)
-      console.log('Hours API response status:', response.status)
-
-      const data = await response.json()
-      console.log('Hours API response data:', data)
-
-      if (data.success) {
-        const existingHours = data.hours || []
-        console.log('Existing hours from database:', existingHours)
-        
-        // Log each individual hour record for debugging
-        existingHours.forEach((hour: any, index: number) => {
-          console.log(`Hour ${index}: day=${hour.day_of_week}, open="${hour.open_time}", close="${hour.close_time}", active=${hour.is_active}`)
-        })
-
-        // Create array for all 7 days of the week
-        const allDayHours = DAYS_OF_WEEK.map((_, dayIndex) => {
-          const existing = existingHours.find((h: BusinessHour) => h.day_of_week === dayIndex)
-
-          if (existing) {
-            // Use existing values, normalizing time format (remove seconds if present)
-            let openTime = existing.open_time || '09:00'
-            let closeTime = existing.close_time || '17:00'
-            
-            // Normalize time format: convert "09:00:00" to "09:00"
-            if (openTime.includes(':')) {
-              openTime = openTime.substring(0, 5) // Take only HH:MM part
-            }
-            if (closeTime.includes(':')) {
-              closeTime = closeTime.substring(0, 5) // Take only HH:MM part
-            }
-            
-            // Replace midnight with sensible defaults
-            if (openTime === '00:00') openTime = '09:00'
-            if (closeTime === '00:00') closeTime = '17:00'
-            
-            console.log(`Day ${dayIndex}: normalized open="${openTime}", close="${closeTime}"`)
-            
-            return {
-              id: existing.id,
-              day_of_week: dayIndex,
-              open_time: openTime,
-              close_time: closeTime,
-              is_active: existing.is_active
-            }
-          }
-
-          // Create default values for days that don't exist in database
-          return {
-            day_of_week: dayIndex,
-            open_time: '09:00',
-            close_time: '17:00',
-            is_active: false
-          }
-        })
-
-        console.log('Final processed business hours:', allDayHours)
-        setBusinessHours(allDayHours)
-      } else {
-        console.error('Failed to load business hours:', data.error)
-        // Initialize with empty hours if API fails
-        const emptyHours = DAYS_OF_WEEK.map((_, dayIndex) => ({
-          day_of_week: dayIndex,
-          open_time: '09:00',
-          close_time: '17:00',
-          is_active: false
-        }))
-        setBusinessHours(emptyHours)
-      }
-    } catch (error) {
-      console.error('Error loading business hours:', error)
-      // Initialize with empty hours on error
-      const emptyHours = DAYS_OF_WEEK.map((_, dayIndex) => ({
-        day_of_week: dayIndex,
-        open_time: '09:00',
-        close_time: '17:00',
-        is_active: false
-      }))
-      setBusinessHours(emptyHours)
-    } finally {
-      setLoadingHours(false)
+  useEffect(() => {
+    const getParams = async () => {
+      const resolvedParams = await params
+      const name = decodeURIComponent(resolvedParams.businessname)
+      setBusinessName(name)
+      checkAuth()
     }
-  }
 
-  const updateDayHours = (dayIndex: number, field: keyof BusinessHour, value: any) => {
+    getParams()
+  }, [params, checkAuth])
+
+  const updateDayHours = (dayIndex: number, field: keyof BusinessHour, value: string | boolean) => {
     setBusinessHours(prev => prev.map(hour => {
       if (hour.day_of_week === dayIndex) {
         const updatedHour = { ...hour, [field]: value }
@@ -388,7 +311,7 @@ export default function BusinessHoursPage({ params }: PageProps) {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {businessHours.map((hour, index) => (
+                  {businessHours.map((hour) => (
                     <div key={hour.day_of_week} className="border rounded-lg p-4" style={{ borderColor: 'var(--border)', backgroundColor: 'var(--bg-secondary)' }}>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">

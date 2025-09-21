@@ -24,7 +24,7 @@ export async function GET(request: Request, { params }: RouteParams) {
 
     // Calculate date range
     const now = new Date()
-    let startDate = new Date()
+    const startDate = new Date()
 
     switch (range) {
       case '1month':
@@ -136,7 +136,8 @@ export async function GET(request: Request, { params }: RouteParams) {
 
     const monthlyData = Array.from(monthlyMap.values())
       .sort((a, b) => a.month.localeCompare(b.month))
-      .map(({ clientIds, ...data }) => data)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      .map(({ clientIds: _, ...data }) => data)
 
     // Calculate top services
     const serviceMap = new Map()

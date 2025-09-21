@@ -1,52 +1,51 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { ClientThemeToggle } from '@/components/ui/ClientThemeToggle'
 import { SuperUserLoginForm } from '@/components/forms/SuperUserLoginForm'
+import { User } from '@/types'
 
 export default function AdminDashboard() {
   // ALL HOOKS MUST BE AT THE TOP - BEFORE ANY CONDITIONAL RETURNS
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [businessToken, setBusinessToken] = useState('')
-  const [clientToken, setClientToken] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
   const [selectedBusiness, setSelectedBusiness] = useState('')
   const [tokenQuantity, setTokenQuantity] = useState(1)
-  const [businesses, setBusinesses] = useState<any[]>([])
-  const [stats, setStats] = useState<any>(null)
+  const [businesses, setBusinesses] = useState<{ id: string; business_name: string; owner_name: string }[]>([])
+  const [stats, setStats] = useState<{ activeBusinesses: number; totalClients: number; activeTokens: number; totalAppointments: number } | null>(null)
   const [loadingData, setLoadingData] = useState(false)
   const [generatedTokens, setGeneratedTokens] = useState<string[]>([])
 
-  useEffect(() => {
-    // Check if user is already authenticated
-    const checkAuth = () => {
-      const savedUser = localStorage.getItem('superuser')
-      if (savedUser) {
-        try {
-          const userData = JSON.parse(savedUser)
-          // Verify the user has a valid UUID
-          if (userData.id && userData.id.length === 36) {
-            setUser(userData)
-            setIsAuthenticated(true)
-          } else {
-            localStorage.removeItem('superuser')
-          }
-        } catch (error) {
+  const checkAuth = useCallback(() => {
+    const savedUser = localStorage.getItem('superuser')
+    if (savedUser) {
+      try {
+        const userData = JSON.parse(savedUser)
+        // Verify the user has a valid UUID
+        if (userData.id && userData.id.length === 36) {
+          setUser(userData)
+          setIsAuthenticated(true)
+        } else {
           localStorage.removeItem('superuser')
         }
+      } catch {
+        localStorage.removeItem('superuser')
       }
-      setIsLoading(false)
     }
-
-    checkAuth()
+    setIsLoading(false)
   }, [])
 
-  const handleLoginSuccess = (userData: any) => {
+  useEffect(() => {
+    checkAuth()
+  }, [checkAuth])
+
+  const handleLoginSuccess = (userData: User) => {
     setUser(userData)
     setIsAuthenticated(true)
     localStorage.setItem('superuser', JSON.stringify(userData))
@@ -108,6 +107,11 @@ export default function AdminDashboard() {
   }
 
   const generateBusinessToken = async () => {
+    if (!user?.id) {
+      alert('User not authenticated')
+      return
+    }
+
     setIsGenerating(true)
     try {
       const response = await fetch('/api/tokens/generate', {
@@ -148,6 +152,11 @@ export default function AdminDashboard() {
       return
     }
 
+    if (!user?.id) {
+      alert('User not authenticated')
+      return
+    }
+
     setIsGenerating(true)
     const tokens: string[] = []
 
@@ -176,7 +185,6 @@ export default function AdminDashboard() {
 
       if (tokens.length > 0) {
         setGeneratedTokens(tokens)
-        setClientToken('') // Clear single token display
         alert(`✅ Successfully generated ${tokens.length} client token(s)`)
         // Refresh stats
         loadAdminData()
@@ -229,7 +237,7 @@ export default function AdminDashboard() {
           <div className="text-center flex-1">
             <h1 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>MyCard Admin</h1>
             <p className="mt-2" style={{ color: 'var(--text-secondary)' }}>Generate invitation tokens for businesses and clients</p>
-            <p className="text-sm mt-1 spotify-green-text">Welcome, {user.first_name}!</p>
+            <p className="text-sm mt-1 spotify-green-text">Welcome, {user?.first_name}!</p>
           </div>
           <div className="flex items-center gap-4">
             <ClientThemeToggle />

@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { ClientThemeToggle } from '@/components/ui/ClientThemeToggle'
+import { BusinessAdminUser } from '@/utils/auth'
 
 interface PageProps {
   params: Promise<{ businessname: string }>
@@ -31,7 +32,7 @@ interface Appointment {
 export default function AppointmentsPage({ params }: PageProps) {
   const router = useRouter()
   const [businessName, setBusinessName] = useState<string>('')
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<BusinessAdminUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loadingAppointments, setLoadingAppointments] = useState(true)
@@ -41,34 +42,7 @@ export default function AppointmentsPage({ params }: PageProps) {
   const [checkinLoading, setCheckinLoading] = useState(false)
 
 
-  useEffect(() => {
-    const getParams = async () => {
-      const resolvedParams = await params
-      setBusinessName(decodeURIComponent(resolvedParams.businessname))
-      checkAuth()
-    }
-
-    getParams()
-  }, [params])
-
-  const checkAuth = () => {
-    const savedUser = localStorage.getItem('businessAdmin')
-    if (savedUser) {
-      try {
-        const userData = JSON.parse(savedUser)
-        setUser(userData)
-        loadAppointments(userData.businessId)
-      } catch (error) {
-        localStorage.removeItem('businessAdmin')
-        router.push(`/${businessName}/login`)
-      }
-    } else {
-      router.push(`/${businessName}/login`)
-    }
-    setIsLoading(false)
-  }
-
-  const loadAppointments = async (businessId: string) => {
+  const loadAppointments = useCallback(async (businessId: string) => {
     try {
       setLoadingAppointments(true)
       const response = await fetch(`/api/businesses/${businessId}/appointments`)
@@ -82,9 +56,41 @@ export default function AppointmentsPage({ params }: PageProps) {
     } finally {
       setLoadingAppointments(false)
     }
-  }
+  }, [])
+
+  const checkAuth = useCallback(() => {
+    const savedUser = localStorage.getItem('businessAdmin')
+    if (savedUser) {
+      try {
+        const userData = JSON.parse(savedUser)
+        setUser(userData)
+        loadAppointments(userData.businessId)
+      } catch {
+        localStorage.removeItem('businessAdmin')
+        router.push(`/${businessName}/login`)
+      }
+    } else {
+      router.push(`/${businessName}/login`)
+    }
+    setIsLoading(false)
+  }, [businessName, router, loadAppointments])
+
+  useEffect(() => {
+    const getParams = async () => {
+      const resolvedParams = await params
+      setBusinessName(decodeURIComponent(resolvedParams.businessname))
+      checkAuth()
+    }
+
+    getParams()
+  }, [params, checkAuth])
 
   const updateAppointmentStatus = async (appointmentId: string, newStatus: Appointment['status']) => {
+    if (!user?.businessId) {
+      alert('User not authenticated')
+      return
+    }
+
     try {
       const response = await fetch(`/api/businesses/${user.businessId}/appointments/${appointmentId}`, {
         method: 'PATCH',
@@ -109,6 +115,11 @@ export default function AppointmentsPage({ params }: PageProps) {
   const confirmWithCode = async () => {
     if (!checkinCode.trim() || checkinCode.length !== 6) {
       alert('Por favor ingresa un código de 6 caracteres válido')
+      return
+    }
+
+    if (!user?.businessId) {
+      alert('User not authenticated')
       return
     }
 
@@ -247,7 +258,7 @@ export default function AppointmentsPage({ params }: PageProps) {
                     key={filterOption.key}
                     variant={filter === filterOption.key ? 'primary' : 'outline'}
                     size="sm"
-                    onClick={() => setFilter(filterOption.key as any)}
+                    onClick={() => setFilter(filterOption.key as 'all' | 'today' | 'pending' | 'confirmed')}
                     className={filter === filterOption.key ? 'btn-primary' : ''}
                   >
                     {filterOption.label}

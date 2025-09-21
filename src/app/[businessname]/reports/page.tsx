@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { ClientThemeToggle } from '@/components/ui/ClientThemeToggle'
+import { BusinessAdminUser } from '@/utils/auth'
 
 interface PageProps {
   params: Promise<{ businessname: string }>
@@ -35,41 +36,14 @@ interface ReportData {
 export default function ReportsPage({ params }: PageProps) {
   const router = useRouter()
   const [businessName, setBusinessName] = useState<string>('')
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<BusinessAdminUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [reportData, setReportData] = useState<ReportData | null>(null)
   const [loadingReports, setLoadingReports] = useState(true)
   const [dateRange, setDateRange] = useState('3months') // 1month, 3months, 6months, 1year
 
 
-  useEffect(() => {
-    const getParams = async () => {
-      const resolvedParams = await params
-      setBusinessName(decodeURIComponent(resolvedParams.businessname))
-      checkAuth()
-    }
-
-    getParams()
-  }, [params])
-
-  const checkAuth = () => {
-    const savedUser = localStorage.getItem('businessAdmin')
-    if (savedUser) {
-      try {
-        const userData = JSON.parse(savedUser)
-        setUser(userData)
-        loadReportData(userData.businessId)
-      } catch (error) {
-        localStorage.removeItem('businessAdmin')
-        router.push(`/${businessName}/login`)
-      }
-    } else {
-      router.push(`/${businessName}/login`)
-    }
-    setIsLoading(false)
-  }
-
-  const loadReportData = async (businessId: string) => {
+  const loadReportData = useCallback(async (businessId: string) => {
     try {
       setLoadingReports(true)
       const response = await fetch(`/api/businesses/${businessId}/reports?range=${dateRange}`)
@@ -83,13 +57,40 @@ export default function ReportsPage({ params }: PageProps) {
     } finally {
       setLoadingReports(false)
     }
-  }
+  }, [dateRange])
+
+  const checkAuth = useCallback(() => {
+    const savedUser = localStorage.getItem('businessAdmin')
+    if (savedUser) {
+      try {
+        const userData = JSON.parse(savedUser)
+        setUser(userData)
+        loadReportData(userData.businessId)
+      } catch {
+        localStorage.removeItem('businessAdmin')
+        router.push(`/${businessName}/login`)
+      }
+    } else {
+      router.push(`/${businessName}/login`)
+    }
+    setIsLoading(false)
+  }, [businessName, router, loadReportData])
+
+  useEffect(() => {
+    const getParams = async () => {
+      const resolvedParams = await params
+      setBusinessName(decodeURIComponent(resolvedParams.businessname))
+      checkAuth()
+    }
+
+    getParams()
+  }, [params, checkAuth])
 
   useEffect(() => {
     if (user?.businessId) {
       loadReportData(user.businessId)
     }
-  }, [dateRange, user?.businessId])
+  }, [dateRange, user?.businessId, loadReportData])
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {

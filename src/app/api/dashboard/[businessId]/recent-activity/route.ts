@@ -23,11 +23,7 @@ export async function GET(request: Request, { params }: RouteParams) {
     const now = new Date()
     const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
     
-    // Format as local date strings 
-    const nowYear = now.getFullYear()
-    const nowMonth = String(now.getMonth() + 1).padStart(2, '0')
-    const nowDay = String(now.getDate()).padStart(2, '0')
-    const todayLocal = `${nowYear}-${nowMonth}-${nowDay}`
+    // Format as local date strings (todayLocal would be calculated here if needed)
     
     const dayAgoYear = oneDayAgo.getFullYear()
     const dayAgoMonth = String(oneDayAgo.getMonth() + 1).padStart(2, '0')
@@ -63,10 +59,7 @@ export async function GET(request: Request, { params }: RouteParams) {
 
     // Get recent client registrations (last 7 days)
     const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-    const weekAgoYear = oneWeekAgo.getFullYear()
-    const weekAgoMonth = String(oneWeekAgo.getMonth() + 1).padStart(2, '0')
-    const weekAgoDay = String(oneWeekAgo.getDate()).padStart(2, '0')
-    const weekAgoLocal = `${weekAgoYear}-${weekAgoMonth}-${weekAgoDay}`
+    // weekAgoLocal would be calculated here if needed in the future
 
     const { data: recentClients, error: clientsError } = await supabaseAdmin
       .from('client_businesses')
@@ -89,12 +82,15 @@ export async function GET(request: Request, { params }: RouteParams) {
     }
 
     // Format activities
-    const activities = []
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const activities: any[] = []
 
     // Add appointment activities
     recentAppointments?.forEach(appointment => {
-      const clientName = `${appointment.users.first_name} ${appointment.users.last_name}`
-      const serviceName = appointment.services.name
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const clientName = `${(appointment.users as any).first_name} ${(appointment.users as any).last_name}`
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const serviceName = (appointment.services as any).name
       const createdAt = new Date(appointment.created_at)
       const timeDiff = Date.now() - createdAt.getTime()
 
@@ -116,7 +112,8 @@ export async function GET(request: Request, { params }: RouteParams) {
         activities.push({
           type: 'payment',
           title: 'Pago recibido',
-          description: `$${appointment.services.price} de ${clientName} - ${serviceName}`,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          description: `$${(appointment.services as any).price} de ${clientName} - ${serviceName}`,
           timeAgo,
           timestamp: appointment.created_at
         })
@@ -133,7 +130,8 @@ export async function GET(request: Request, { params }: RouteParams) {
 
     // Add client registration activities
     recentClients?.forEach(client => {
-      const clientName = `${client.users.first_name} ${client.users.last_name}`
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const clientName = `${(client.users as any).first_name} ${(client.users as any).last_name}`
       const createdAt = new Date(client.created_at)
       const timeDiff = Date.now() - createdAt.getTime()
 

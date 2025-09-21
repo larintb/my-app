@@ -47,6 +47,11 @@ export async function GET(request: Request, { params }: RouteParams) {
       (clientsData || []).map(async (clientRel) => {
         const client = clientRel.users
 
+        // Skip if no user data
+        if (!client) {
+          return null
+        }
+
         // Get appointment count and stats
         const { data: appointments, error: appointmentsError } = await supabaseAdmin
           .from('appointments')
@@ -57,7 +62,7 @@ export async function GET(request: Request, { params }: RouteParams) {
             services (price)
           `)
           .eq('business_id', businessId)
-          .eq('client_id', client.id)
+          .eq('client_id', clientRel.client_id)
 
         if (appointmentsError) {
           console.error('Error fetching client appointments:', appointmentsError)
@@ -66,7 +71,8 @@ export async function GET(request: Request, { params }: RouteParams) {
         const appointmentCount = appointments?.length || 0
         const completedAppointments = appointments?.filter(a => a.status === 'completed') || []
         const totalSpent = completedAppointments.reduce((sum, appointment) => {
-          return sum + (appointment.services?.price || 0)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          return sum + ((appointment.services as any)?.price || 0)
         }, 0)
 
         // Get last appointment date
@@ -75,10 +81,14 @@ export async function GET(request: Request, { params }: RouteParams) {
           : null
 
         return {
-          id: client.id,
-          first_name: client.first_name,
-          last_name: client.last_name,
-          phone: client.phone,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          id: (client as any).id,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          first_name: (client as any).first_name,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          last_name: (client as any).last_name,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          phone: (client as any).phone,
           created_at: clientRel.created_at,
           appointment_count: appointmentCount,
           total_spent: totalSpent,
@@ -89,7 +99,7 @@ export async function GET(request: Request, { params }: RouteParams) {
 
     return NextResponse.json({
       success: true,
-      clients: clientsWithStats
+      clients: clientsWithStats.filter(client => client !== null)
     })
 
   } catch (error) {

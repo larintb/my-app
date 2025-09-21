@@ -34,8 +34,10 @@ export function GoogleMap({ address, businessName, className = '' }: GoogleMapPr
         const geocoder = new window.google.maps.Geocoder()
 
         // Geocode the address
-        const results = await new Promise<google.maps.GeocoderResult[]>((resolve, reject) => {
-          geocoder.geocode({ address }, (results, status) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const results = await new Promise<any[]>((resolve, reject) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          geocoder.geocode({ address }, (results: any, status: any) => {
             if (status === 'OK' && results) {
               resolve(results)
             } else {
@@ -168,9 +170,4 @@ export function GoogleMap({ address, businessName, className = '' }: GoogleMapPr
   )
 }
 
-// Extend window object to include google maps types
-declare global {
-  interface Window {
-    google: typeof google
-  }
-}
+// Google Maps types are declared in AddressAutocomplete.tsx

@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { ClientThemeToggle } from '@/components/ui/ClientThemeToggle'
+import { BusinessAdminUser } from '@/utils/auth'
 
 interface PageProps {
   params: Promise<{ businessname: string }>
@@ -20,10 +21,16 @@ interface Service {
   is_active: boolean
 }
 
+interface ServiceFormErrors {
+  name?: string
+  price?: string
+  duration_minutes?: string
+}
+
 export default function ServicesPage({ params }: PageProps) {
   const router = useRouter()
   const [businessName, setBusinessName] = useState<string>('')
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<BusinessAdminUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [services, setServices] = useState<Service[]>([])
   const [loadingServices, setLoadingServices] = useState(true)
@@ -38,37 +45,10 @@ export default function ServicesPage({ params }: PageProps) {
     price: '',
     duration_minutes: ''
   })
-  const [formErrors, setFormErrors] = useState<any>({})
+  const [formErrors, setFormErrors] = useState<ServiceFormErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  useEffect(() => {
-    const getParams = async () => {
-      const resolvedParams = await params
-      setBusinessName(decodeURIComponent(resolvedParams.businessname))
-      checkAuth()
-    }
-
-    getParams()
-  }, [params])
-
-  const checkAuth = () => {
-    const savedUser = localStorage.getItem('businessAdmin')
-    if (savedUser) {
-      try {
-        const userData = JSON.parse(savedUser)
-        setUser(userData)
-        loadServices(userData.businessId)
-      } catch (error) {
-        localStorage.removeItem('businessAdmin')
-        router.push(`/${businessName}/login`)
-      }
-    } else {
-      router.push(`/${businessName}/login`)
-    }
-    setIsLoading(false)
-  }
-
-  const loadServices = async (businessId: string) => {
+  const loadServices = useCallback(async (businessId: string) => {
     try {
       setLoadingServices(true)
       const response = await fetch(`/api/businesses/${businessId}/services`)
@@ -82,17 +62,44 @@ export default function ServicesPage({ params }: PageProps) {
     } finally {
       setLoadingServices(false)
     }
-  }
+  }, [])
+
+  const checkAuth = useCallback(() => {
+    const savedUser = localStorage.getItem('businessAdmin')
+    if (savedUser) {
+      try {
+        const userData = JSON.parse(savedUser)
+        setUser(userData)
+        loadServices(userData.businessId)
+      } catch {
+        localStorage.removeItem('businessAdmin')
+        router.push(`/${businessName}/login`)
+      }
+    } else {
+      router.push(`/${businessName}/login`)
+    }
+    setIsLoading(false)
+  }, [businessName, router, loadServices])
+
+  useEffect(() => {
+    const getParams = async () => {
+      const resolvedParams = await params
+      setBusinessName(decodeURIComponent(resolvedParams.businessname))
+      checkAuth()
+    }
+
+    getParams()
+  }, [params, checkAuth])
 
   const handleInputChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData(prev => ({ ...prev, [field]: e.target.value }))
-    if (formErrors[field]) {
-      setFormErrors((prev: any) => ({ ...prev, [field]: '' }))
+    if (formErrors[field as keyof ServiceFormErrors]) {
+      setFormErrors((prev) => ({ ...prev, [field as keyof ServiceFormErrors]: '' }))
     }
   }
 
   const validateForm = () => {
-    const errors: any = {}
+    const errors: ServiceFormErrors = {}
 
     if (!formData.name.trim()) errors.name = 'El nombre del servicio es requerido'
     if (!formData.price || parseFloat(formData.price) <= 0) errors.price = 'Se requiere un precio válido'
@@ -105,6 +112,11 @@ export default function ServicesPage({ params }: PageProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!validateForm()) return
+
+    if (!user?.businessId) {
+      alert('User not authenticated')
+      return
+    }
 
     setIsSubmitting(true)
     try {
@@ -170,6 +182,11 @@ export default function ServicesPage({ params }: PageProps) {
 
   const deleteService = async (serviceId: string) => {
     if (!confirm('¿Estás seguro de que quieres eliminar este servicio?')) return
+
+    if (!user?.businessId) {
+      alert('User not authenticated')
+      return
+    }
 
     try {
       const response = await fetch(`/api/businesses/${user.businessId}/services/${serviceId}`, {

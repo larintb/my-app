@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import { BusinessLoginForm } from '@/components/forms/BusinessLoginForm'
 import { Card, CardContent } from '@/components/ui/Card'
 import { ClientThemeToggle } from '@/components/ui/ClientThemeToggle'
-import { setBusinessAdminSession } from '@/utils/auth'
+import { setBusinessAdminSession, BusinessAdminUser } from '@/utils/auth'
+import { Business } from '@/types'
 
 interface PageProps {
   params: Promise<{ businessname: string }>
@@ -14,7 +15,7 @@ interface PageProps {
 export default function BusinessLoginPage({ params }: PageProps) {
   const router = useRouter()
   const [businessName, setBusinessName] = useState<string>('')
-  const [businessData, setBusinessData] = useState<any>(null)
+  const [businessData, setBusinessData] = useState<Business | null>(null)
   const [loadingState, setLoadingState] = useState<'loading' | 'found' | 'not_found'>('loading')
 
   useEffect(() => {
@@ -45,7 +46,7 @@ export default function BusinessLoginPage({ params }: PageProps) {
     }
   }
 
-  const handleLoginSuccess = (user: any) => {
+  const handleLoginSuccess = (user: BusinessAdminUser) => {
     // Store business admin session (localStorage + cookie)
     setBusinessAdminSession(user)
 
@@ -83,7 +84,7 @@ export default function BusinessLoginPage({ params }: PageProps) {
               <div className="text-6xl mb-4">🏢❌</div>
               <h2 className="text-xl font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Negocio No Encontrado</h2>
               <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>
-                No se encontró ningún negocio con el nombre "{businessName}"
+                No se encontró ningún negocio con el nombre &quot;{businessName}&quot;
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                 Por favor, verifica la URL o contacta al dueño del negocio.

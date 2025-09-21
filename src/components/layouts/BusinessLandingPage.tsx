@@ -1,9 +1,7 @@
 ﻿'use client'
 
 import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/Button'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
-import { Business, Service } from '@/types'
+import { Business, Service, BusinessHours } from '@/types'
 
 interface BusinessLandingPageProps {
   business: Business
@@ -18,7 +16,7 @@ export function BusinessLandingPage({
   onBookAppointment,
   onViewSchedule
 }: BusinessLandingPageProps) {
-  const [businessHours, setBusinessHours] = useState<any[]>([])
+  const [businessHours, setBusinessHours] = useState<BusinessHours[]>([])
   const [loadingHours, setLoadingHours] = useState(true)
 
   useEffect(() => {
@@ -245,7 +243,7 @@ export function BusinessLandingPage({
                 Services Coming Soon
               </h3>
               <p className="text-gray-600">
-                We're preparing our service offerings for you. Please check back soon!
+                We&apos;re preparing our service offerings for you. Please check back soon!
               </p>
             </div>
           )}
@@ -311,14 +309,14 @@ export function BusinessLandingPage({
                       </span>
                       
                       <span className={`${
-                        hour.is_closed 
-                          ? 'text-red-500 font-medium' 
-                          : isToday 
-                            ? 'font-bold' 
+                        !hour.is_active
+                          ? 'text-red-500 font-medium'
+                          : isToday
+                            ? 'font-bold'
                             : 'text-gray-600'
                       }`}
-                      style={isToday && !hour.is_closed ? { color: 'var(--theme-primary, #1f2937)' } : {}}>
-                        {hour.is_closed ? 'Closed' : `${hour.open_time} - ${hour.close_time}`}
+                      style={isToday && hour.is_active ? { color: 'var(--theme-primary, #1f2937)' } : {}}>
+                        {!hour.is_active ? 'Closed' : `${hour.open_time} - ${hour.close_time}`}
                       </span>
                     </div>
                   )

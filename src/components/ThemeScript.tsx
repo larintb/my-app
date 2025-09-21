@@ -13,7 +13,7 @@ export function ThemeScript() {
 
         // Apply theme to document immediately
         document.documentElement.setAttribute('data-theme', initialTheme)
-      } catch (error) {
+      } catch {
         // If localStorage is not available, use system preference
         const systemPreference = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
         document.documentElement.setAttribute('data-theme', systemPreference)

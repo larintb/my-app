@@ -5,10 +5,10 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { ClientThemeToggle } from '@/components/ui/ClientThemeToggle'
-import { LoginForm } from '@/types'
+import { LoginForm, User } from '@/types'
 
 interface SuperUserLoginProps {
-  onSuccess: (user: any) => void
+  onSuccess: (user: User) => void
 }
 
 export function SuperUserLoginForm({ onSuccess }: SuperUserLoginProps) {

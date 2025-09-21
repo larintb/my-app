@@ -13,7 +13,7 @@ export const ClientThemeToggle: React.FC = () => {
       const initialTheme = savedTheme || systemPreference;
       setTheme(initialTheme);
       setMounted(true);
-    } catch (error) {
+    } catch {
       // Fallback for SSR
       setTheme('light');
       setMounted(true);

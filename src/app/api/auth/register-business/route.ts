@@ -75,7 +75,8 @@ export async function POST(request: Request) {
     const businessSlug = generateBusinessSlug(business_name)
 
     // Remove password from response
-    const { password_hash, ...userResponse } = user
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password_hash: _, ...userResponse } = user
 
     return NextResponse.json({
       success: true,
@@ -88,11 +89,12 @@ export async function POST(request: Request) {
       message: 'Business account created successfully'
     })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Business registration error:', error)
 
     // Handle duplicate email error
-    if (error.code === '23505' && error.details?.includes('email')) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((error as any).code === '23505' && (error as any).details?.includes('email')) {
       return NextResponse.json(
         { error: 'Email already exists' },
         { status: 409 }

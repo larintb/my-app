@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { ClientThemeToggle } from '@/components/ui/ClientThemeToggle'
+import { BusinessAdminUser } from '@/utils/auth'
 
 interface PageProps {
   params: Promise<{ businessname: string }>
@@ -25,41 +26,14 @@ interface Client {
 export default function ClientsPage({ params }: PageProps) {
   const router = useRouter()
   const [businessName, setBusinessName] = useState<string>('')
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<BusinessAdminUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [clients, setClients] = useState<Client[]>([])
   const [loadingClients, setLoadingClients] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
 
 
-  useEffect(() => {
-    const getParams = async () => {
-      const resolvedParams = await params
-      setBusinessName(decodeURIComponent(resolvedParams.businessname))
-      checkAuth()
-    }
-
-    getParams()
-  }, [params])
-
-  const checkAuth = () => {
-    const savedUser = localStorage.getItem('businessAdmin')
-    if (savedUser) {
-      try {
-        const userData = JSON.parse(savedUser)
-        setUser(userData)
-        loadClients(userData.businessId)
-      } catch (error) {
-        localStorage.removeItem('businessAdmin')
-        router.push(`/${businessName}/login`)
-      }
-    } else {
-      router.push(`/${businessName}/login`)
-    }
-    setIsLoading(false)
-  }
-
-  const loadClients = async (businessId: string) => {
+  const loadClients = useCallback(async (businessId: string) => {
     try {
       setLoadingClients(true)
       const response = await fetch(`/api/businesses/${businessId}/clients`)
@@ -73,8 +47,34 @@ export default function ClientsPage({ params }: PageProps) {
     } finally {
       setLoadingClients(false)
     }
-  }
+  }, [])
 
+  const checkAuth = useCallback(() => {
+    const savedUser = localStorage.getItem('businessAdmin')
+    if (savedUser) {
+      try {
+        const userData = JSON.parse(savedUser)
+        setUser(userData)
+        loadClients(userData.businessId)
+      } catch {
+        localStorage.removeItem('businessAdmin')
+        router.push(`/${businessName}/login`)
+      }
+    } else {
+      router.push(`/${businessName}/login`)
+    }
+    setIsLoading(false)
+  }, [businessName, router, loadClients])
+
+  useEffect(() => {
+    const getParams = async () => {
+      const resolvedParams = await params
+      setBusinessName(decodeURIComponent(resolvedParams.businessname))
+      checkAuth()
+    }
+
+    getParams()
+  }, [params, checkAuth])
 
   const filteredClients = clients.filter(client =>
     client.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -232,7 +232,7 @@ export default function ClientsPage({ params }: PageProps) {
                   <div className="text-6xl mb-4">🔍</div>
                   <h3 className="text-xl font-semibold text-app mb-2">No se encontraron clientes</h3>
                   <p className="text-muted mb-4">
-                    No hay clientes que coincidan con tu búsqueda de "{searchTerm}"
+                    No hay clientes que coincidan con tu búsqueda de &ldquo;{searchTerm}&rdquo;
                   </p>
                   <Button
                     variant="outline"

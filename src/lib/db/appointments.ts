@@ -188,7 +188,7 @@ export async function getAppointmentStats(businessId: string) {
     if (revenueError) throw revenueError
 
     const todayRevenue = revenueData?.reduce((total, appointment) => {
-      return total + (appointment.services?.price || 0)
+      return total + (appointment.services?.[0]?.price || 0)
     }, 0) || 0
 
     return {

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 
 // GET /api/admin/stats - Get admin dashboard statistics
-export async function GET(request: Request) {
+export async function GET() {
   try {
     // Get businesses count
     const { count: businessCount, error: businessError } = await supabaseAdmin

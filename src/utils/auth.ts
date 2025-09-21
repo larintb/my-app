@@ -46,8 +46,13 @@ export function isBusinessAdminAuthenticated(): boolean {
   return getBusinessAdminSession() !== null
 }
 
+// Router interface for type safety
+interface Router {
+  push: (path: string) => void
+}
+
 // Redirect to login if not authenticated
-export function requireBusinessAdminAuth(businessName: string, router: any): BusinessAdminUser | null {
+export function requireBusinessAdminAuth(businessName: string, router: Router): BusinessAdminUser | null {
   const user = getBusinessAdminSession()
   if (!user) {
     clearBusinessAdminSession()
