@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import Image from 'next/image'
 import { ClientRegistrationForm } from '@/components/forms/ClientRegistrationForm'
 import { ClientAppointmentInterface } from '@/components/client/ClientAppointmentInterface'
 import { useBusinessTheme } from '@/hooks/useBusinessTheme'
@@ -16,6 +17,7 @@ export default function ClientTokenPage({ params }: PageProps) {
   const [business, setBusiness] = useState<Business | null>(null)
   const [services, setServices] = useState<Service[]>([])
   const [user, setUser] = useState<User | null>(null)
+  const [showSplash, setShowSplash] = useState(false)
 
   // Apply business theme
   const { isLoading: themeLoading } = useBusinessTheme(business?.id)
@@ -58,6 +60,14 @@ export default function ClientTokenPage({ params }: PageProps) {
         } else {
           setTokenStatus('valid')
         }
+
+        // Show splash screen after successful validation
+        setShowSplash(true)
+
+        // Hide splash screen after 2 seconds
+        setTimeout(() => {
+          setShowSplash(false)
+        }, 2000)
       } else {
         setTokenStatus('invalid')
       }
@@ -86,25 +96,57 @@ export default function ClientTokenPage({ params }: PageProps) {
 
   if (tokenStatus === 'loading' || themeLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
+      <div
+        className="min-h-screen font-inter transition-colors duration-300"
+        style={{
+          backgroundColor: 'var(--bg-primary)',
+          color: 'var(--text-primary)'
+        }}
+      >
         <div className="flex items-center justify-center min-h-screen p-4">
-          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 max-w-md w-full">
+          <div
+            className="backdrop-blur-sm rounded-2xl shadow-xl p-8 max-w-md w-full feature-card"
+            style={{
+              backgroundColor: 'var(--bg-card)',
+              borderColor: 'var(--border-color)'
+            }}
+          >
             <div className="text-center">
-              {/* Animated loading spinner */}
+              {/* Animated loading reload icon */}
               <div className="relative mb-6">
-                <div className="w-16 h-16 mx-auto">
-                  <div className="absolute inset-0 rounded-full border-4 border-green-100"></div>
-                  <div className="absolute inset-0 rounded-full border-4 border-green-500 border-t-transparent animate-spin"></div>
+                <div className="w-16 h-16 mx-auto flex items-center justify-center">
+                  <svg
+                    className="w-12 h-12 text-green-500 animate-spin"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    style={{ animationDuration: '1.5s' }}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
+                  </svg>
                 </div>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Cargando...</h3>
-              <p className="text-gray-600">Validando tu acceso y cargando la información del negocio</p>
-              
-              {/* Loading dots animation */}
-              <div className="flex justify-center mt-4 space-x-1">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                <div className="w-2 h-2 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+
+              <h3
+                className="text-xl font-semibold mb-2"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                Cargando...
+              </h3>
+              <p style={{ color: 'var(--text-secondary)' }}>
+                Validando tu acceso y cargando la información del negocio
+              </p>
+
+              {/* Enhanced loading dots animation */}
+              <div className="flex justify-center mt-6 space-x-2">
+                <div className="w-3 h-3 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                <div className="w-3 h-3 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '200ms' }}></div>
+                <div className="w-3 h-3 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '400ms' }}></div>
               </div>
             </div>
           </div>
@@ -113,38 +155,175 @@ export default function ClientTokenPage({ params }: PageProps) {
     )
   }
 
+  // Splash screen after loading is complete
+  if (showSplash && business) {
+    return (
+      <div
+        className="min-h-screen font-inter transition-all duration-500 flex items-center justify-center"
+        style={{
+          backgroundColor: 'var(--bg-primary)',
+          color: 'var(--text-primary)'
+        }}
+      >
+        <div className="text-center">
+          {/* Business logo/image with zoom in animation */}
+          <div
+            className="mb-6"
+            style={{
+              animation: 'zoomIn 0.8s ease-out forwards, fadeOut 0.5s ease-in 1.5s forwards'
+            }}
+          >
+            <div className="w-24 h-24 mx-auto rounded-full overflow-hidden shadow-2xl bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
+              {business.business_image_url ? (
+                <Image
+                  src={business.business_image_url}
+                  alt={`Logo de ${business.business_name}`}
+                  width={96}
+                  height={96}
+                  className="w-full h-full object-cover"
+                  priority
+                />
+              ) : (
+                <svg
+                  className="w-12 h-12 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                  />
+                </svg>
+              )}
+            </div>
+          </div>
+
+          {/* Business name with zoom in animation */}
+          <h1
+            className="text-3xl font-bold"
+            style={{
+              color: 'var(--text-primary)',
+              animation: 'zoomIn 0.8s ease-out 0.3s forwards, fadeOut 0.5s ease-in 1.5s forwards',
+              opacity: 0
+            }}
+          >
+            {business.business_name}
+          </h1>
+
+          {/* Welcome text */}
+          <p
+            className="text-lg mt-2"
+            style={{
+              color: 'var(--text-secondary)',
+              animation: 'zoomIn 0.8s ease-out 0.6s forwards, fadeOut 0.5s ease-in 1.5s forwards',
+              opacity: 0
+            }}
+          >
+            Bienvenido
+          </p>
+        </div>
+
+        {/* Custom CSS animations */}
+        <style jsx>{`
+          @keyframes zoomIn {
+            from {
+              opacity: 0;
+              transform: scale(0.3);
+            }
+            to {
+              opacity: 1;
+              transform: scale(1);
+            }
+          }
+
+          @keyframes fadeOut {
+            from {
+              opacity: 1;
+              transform: scale(1);
+            }
+            to {
+              opacity: 0;
+              transform: scale(1.1);
+            }
+          }
+        `}</style>
+      </div>
+    )
+  }
+
   if (tokenStatus === 'invalid') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50">
+      <div
+        className="min-h-screen font-inter transition-colors duration-300"
+        style={{
+          backgroundColor: 'var(--bg-primary)',
+          color: 'var(--text-primary)'
+        }}
+      >
         <div className="flex items-center justify-center min-h-screen p-4">
-          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 max-w-md w-full text-center">
+          <div
+            className="backdrop-blur-sm rounded-2xl shadow-xl p-8 max-w-md w-full text-center feature-card"
+            style={{
+              backgroundColor: 'var(--bg-card)',
+              borderColor: 'var(--border-color)'
+            }}
+          >
             {/* Error icon */}
             <div className="mb-6">
-              <div className="w-20 h-20 mx-auto bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center shadow-lg">
+              <div
+                className="w-20 h-20 mx-auto bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center shadow-lg"
+                style={{ backgroundColor: 'var(--danger-color)' }}
+              >
                 <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
                 </svg>
               </div>
             </div>
 
-            <h2 className="text-2xl font-bold text-gray-900 mb-3">Enlace No Válido</h2>
-            <p className="text-gray-600 mb-6 leading-relaxed">
+            <h2
+              className="text-2xl font-bold mb-3"
+              style={{ color: 'var(--text-primary)' }}
+            >
+              Enlace No Válido
+            </h2>
+            <p
+              className="mb-6 leading-relaxed"
+              style={{ color: 'var(--text-secondary)' }}
+            >
               Este enlace de tarjeta de negocio no es válido o ha sido desactivado.
             </p>
-            
+
             {/* Action suggestions */}
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
-              <h4 className="font-semibold text-amber-800 mb-2">¿Qué puedes hacer?</h4>
-              <ul className="text-sm text-amber-700 space-y-1 text-left">
+            <div
+              className="rounded-xl p-4 mb-6"
+              style={{
+                backgroundColor: 'var(--bg-secondary)',
+                borderColor: 'var(--warning-color)',
+                border: '1px solid'
+              }}
+            >
+              <h4
+                className="font-semibold mb-2"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                ¿Qué puedes hacer?
+              </h4>
+              <ul
+                className="text-sm space-y-1 text-left"
+                style={{ color: 'var(--text-secondary)' }}
+              >
                 <li>• Solicita una nueva tarjeta al negocio</li>
                 <li>• Verifica que el enlace esté completo</li>
                 <li>• Contacta directamente al establecimiento</li>
               </ul>
             </div>
 
-            <button 
-              onClick={() => window.history.back()} 
-              className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-3 px-6 rounded-xl transition duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            <button
+              onClick={() => window.history.back()}
+              className="w-full btn-primary font-semibold py-3 px-6 rounded-xl transition duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             >
               Regresar
             </button>
@@ -154,21 +333,21 @@ export default function ClientTokenPage({ params }: PageProps) {
     )
   }
 
-  if (tokenStatus === 'valid' && business) {
+  if (tokenStatus === 'valid' && business && !showSplash) {
     return (
       <ClientRegistrationForm
         token={token}
-        businessName={business.business_name}
+        business={business}
         onSuccess={handleRegistrationSuccess}
       />
     )
   }
 
-  if (tokenStatus === 'registered' && business && user) {
+  if (tokenStatus === 'registered' && business && user && !showSplash) {
     return (
-      <div 
+      <div
         className="min-h-screen transition-colors duration-300"
-        style={{ 
+        style={{
           backgroundColor: 'var(--background, #f8fafc)',
           color: 'var(--foreground, #1e293b)'
         }}

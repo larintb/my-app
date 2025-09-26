@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { ClientThemeToggle } from '@/components/ui/ClientThemeToggle'
-import { FinalClientRegistrationForm, User } from '@/types'
+import { FinalClientRegistrationForm, User, Business } from '@/types'
+import Image from 'next/image'
 
 interface ClientRegistrationSuccessData {
   success: boolean
@@ -15,11 +16,11 @@ interface ClientRegistrationSuccessData {
 
 interface ClientRegistrationProps {
   token: string
-  businessName: string
+  business: Business
   onSuccess: (data: ClientRegistrationSuccessData) => void
 }
 
-export function ClientRegistrationForm({ token, businessName, onSuccess }: ClientRegistrationProps) {
+export function ClientRegistrationForm({ token, business, onSuccess }: ClientRegistrationProps) {
   const [formData, setFormData] = useState<FinalClientRegistrationForm>({
     first_name: '',
     last_name: '',
@@ -84,7 +85,7 @@ export function ClientRegistrationForm({ token, businessName, onSuccess }: Clien
       if (data.success) {
         onSuccess({
           success: true,
-          message: 'Welcome to ' + businessName + '!',
+          message: 'Welcome to ' + business.business_name + '!',
           user: data.user
         })
       } else {
@@ -105,10 +106,36 @@ export function ClientRegistrationForm({ token, businessName, onSuccess }: Clien
       </div>
       <div className="mx-auto max-w-md">
         <div className="mb-8 text-center">
-          <div className="text-6xl mb-4">🌱</div>
+          <div className="mb-4">
+            <div className="w-20 h-20 mx-auto rounded-full overflow-hidden shadow-xl bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
+              {business.business_image_url ? (
+                <Image
+                  src={business.business_image_url}
+                  alt={`Logo de ${business.business_name}`}
+                  width={80}
+                  height={80}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <svg
+                  className="w-10 h-10 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                  />
+                </svg>
+              )}
+            </div>
+          </div>
           <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>¡Bienvenido!</h1>
           <p className="mt-2" style={{ color: 'var(--text-secondary)' }}>
-            Te estás registrando en <span className="font-semibold spotify-green-text">{businessName}</span>
+            Te estás registrando en <span className="font-semibold spotify-green-text">{business.business_name}</span>
           </p>
         </div>
 
@@ -162,7 +189,7 @@ export function ClientRegistrationForm({ token, businessName, onSuccess }: Clien
 
         <div className="mt-6 text-center">
           <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            🔒 Tu información es segura y solo será utilizada por {businessName}
+            🔒 Tu información es segura y solo será utilizada por {business.business_name}
           </p>
         </div>
       </div>

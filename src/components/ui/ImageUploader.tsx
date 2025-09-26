@@ -62,7 +62,7 @@ export function ImageUploader({
     return new Promise((resolve) => {
       const canvas = document.createElement('canvas')
       const ctx = canvas.getContext('2d')
-      const img = new HTMLImageElement()
+      const img = document.createElement('img')
 
       img.onload = () => {
         // Calculate new dimensions (max 800x800)

@@ -73,7 +73,7 @@ html, body {
 
 /* Default body styles */
 body {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--font-inter), 'Inter', sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   transition: background-color 0.3s ease, color 0.3s ease;
