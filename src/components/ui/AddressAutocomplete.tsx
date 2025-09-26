@@ -1,12 +1,48 @@
 'use client'
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useRef, useState } from 'react'
 
-// Minimal Google Maps types
+// Google Maps types
+interface GoogleMapsPlace {
+  formatted_address?: string
+  address_components?: Array<{
+    long_name: string
+    short_name: string
+    types: string[]
+  }>
+  geometry?: {
+    location: {
+      lat: () => number
+      lng: () => number
+    }
+  }
+  place_id?: string
+}
+
 interface GoogleMapsAutocomplete {
   addListener: (event: string, callback: () => void) => void
-  getPlace: () => any
+  getPlace: () => GoogleMapsPlace
+}
+
+interface GoogleMapsAutocompleteOptions {
+  types?: string[]
+  componentRestrictions?: {
+    country?: string | string[]
+  }
+}
+
+interface WindowWithGoogleMaps extends Window {
+  google?: {
+    maps?: {
+      places?: {
+        Autocomplete: new (input: HTMLInputElement, options?: GoogleMapsAutocompleteOptions) => GoogleMapsAutocomplete
+      }
+      event?: {
+        clearInstanceListeners: (instance: GoogleMapsAutocomplete) => void
+      }
+    }
+  }
+  googleMapsLoading?: Promise<void>
 }
 
 
@@ -45,13 +81,15 @@ export function AddressAutocomplete({
 
   // Global script loading state
   const loadGoogleMaps = async () => {
-    if ((window as any).google && (window as any).google.maps && (window as any).google.maps.places) {
+    const windowWithMaps = window as WindowWithGoogleMaps
+    if (windowWithMaps.google?.maps?.places) {
       return Promise.resolve()
     }
 
     // Check if script is already being loaded
-    if ((window as typeof window & { googleMapsLoading?: Promise<void> }).googleMapsLoading) {
-      return (window as typeof window & { googleMapsLoading?: Promise<void> }).googleMapsLoading
+    const windowWithLoading = window as WindowWithGoogleMaps
+    if (windowWithLoading.googleMapsLoading) {
+      return windowWithLoading.googleMapsLoading
     }
 
     // Check if script is already in the page
@@ -59,7 +97,8 @@ export function AddressAutocomplete({
     if (existingScript) {
       return new Promise<void>((resolve) => {
         const checkGoogleMaps = () => {
-          if ((window as any).google && (window as any).google.maps && (window as any).google.maps.places) {
+          const windowWithMaps = window as WindowWithGoogleMaps
+          if (windowWithMaps.google?.maps?.places) {
             resolve()
           } else {
             setTimeout(checkGoogleMaps, 100)
@@ -82,22 +121,24 @@ export function AddressAutocomplete({
       script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`
       script.async = true
       script.onload = () => {
-        delete (window as typeof window & { googleMapsLoading?: Promise<void> }).googleMapsLoading
+        const windowWithLoading = window as WindowWithGoogleMaps
+        delete windowWithLoading.googleMapsLoading
         resolve()
       }
       script.onerror = () => {
-        delete (window as typeof window & { googleMapsLoading?: Promise<void> }).googleMapsLoading
+        const windowWithLoading = window as WindowWithGoogleMaps
+        delete windowWithLoading.googleMapsLoading
         reject(new Error('Failed to load Google Maps'))
       }
       document.head.appendChild(script)
     })
 
-    ;(window as typeof window & { googleMapsLoading?: Promise<void> }).googleMapsLoading = loadingPromise
+    ;(window as WindowWithGoogleMaps).googleMapsLoading = loadingPromise
     return loadingPromise
   }
 
   // Parse address components
-  const parseAddressComponents = (place: { formatted_address?: string; place_id?: string; geometry?: any; address_components?: any[] }): AddressDetails => {
+  const parseAddressComponents = (place: GoogleMapsPlace): AddressDetails => {
     const addressDetails: AddressDetails = {
       fullAddress: place.formatted_address || '',
       placeId: place.place_id,
@@ -143,10 +184,10 @@ export function AddressAutocomplete({
 
         if (!inputRef.current) return
 
-        const autocomplete = new (window as any).google.maps.places.Autocomplete(inputRef.current, {
+        const windowWithMaps = window as WindowWithGoogleMaps
+        const autocomplete = new windowWithMaps.google!.maps!.places!.Autocomplete(inputRef.current, {
           types: ['address'],
-          componentRestrictions: { country: ['us', 'mx'] },
-          fields: ['address_components', 'formatted_address', 'geometry', 'place_id']
+          componentRestrictions: { country: ['us', 'mx'] }
         })
 
         autocomplete.addListener('place_changed', () => {
@@ -175,7 +216,10 @@ export function AddressAutocomplete({
 
     return () => {
       if (autocompleteRef.current) {
-        (window as any).google.maps.event.clearInstanceListeners(autocompleteRef.current)
+        const windowWithMaps = window as WindowWithGoogleMaps
+        if (windowWithMaps.google?.maps?.event?.clearInstanceListeners) {
+          windowWithMaps.google.maps.event.clearInstanceListeners(autocompleteRef.current)
+        }
       }
     }
   }, [onAddressSelect])

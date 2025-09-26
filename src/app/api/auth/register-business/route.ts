@@ -4,6 +4,12 @@ import { createUser } from '@/lib/db/users'
 import { createBusiness, generateBusinessSlug } from '@/lib/db/businesses'
 import bcrypt from 'bcryptjs'
 
+interface SupabaseError {
+  code?: string
+  details?: string
+  message: string
+}
+
 export async function POST(request: Request) {
   try {
     const {
@@ -93,8 +99,8 @@ export async function POST(request: Request) {
     console.error('Business registration error:', error)
 
     // Handle duplicate email error
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ((error as any).code === '23505' && (error as any).details?.includes('email')) {
+    const supabaseError = error as SupabaseError
+    if (supabaseError.code === '23505' && supabaseError.details?.includes('email')) {
       return NextResponse.json(
         { error: 'Email already exists' },
         { status: 409 }

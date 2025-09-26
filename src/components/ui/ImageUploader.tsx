@@ -23,41 +23,6 @@ export function ImageUploader({
   const [isProcessing, setIsProcessing] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const processFile = useCallback(async (file: File) => {
-    if (!file) return
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      alert('Por favor selecciona solo archivos de imagen')
-      return
-    }
-
-    // Validate file size (5MB max)
-    if (file.size > 5 * 1024 * 1024) {
-      alert('La imagen debe ser menor a 5MB')
-      return
-    }
-
-    setIsProcessing(true)
-
-    try {
-      // Create preview URL
-      const preview = URL.createObjectURL(file)
-      setPreviewUrl(preview)
-
-      // Compress image if needed
-      const compressedFile = await compressImage(file)
-
-      onImageSelect(compressedFile, preview)
-    } catch (error) {
-      console.error('Error processing image:', error)
-      alert('Error al procesar la imagen')
-    } finally {
-      setIsProcessing(false)
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onImageSelect])
-
   const compressImage = useCallback((file: File): Promise<File> => {
     return new Promise((resolve) => {
       const canvas = document.createElement('canvas')
@@ -107,6 +72,40 @@ export function ImageUploader({
       img.src = URL.createObjectURL(file)
     })
   }, [])
+
+  const processFile = useCallback(async (file: File) => {
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Por favor selecciona solo archivos de imagen')
+      return
+    }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('La imagen debe ser menor a 5MB')
+      return
+    }
+
+    setIsProcessing(true)
+
+    try {
+      // Create preview URL
+      const preview = URL.createObjectURL(file)
+      setPreviewUrl(preview)
+
+      // Compress image if needed
+      const compressedFile = await compressImage(file)
+
+      onImageSelect(compressedFile, preview)
+    } catch (error) {
+      console.error('Error processing image:', error)
+      alert('Error al procesar la imagen')
+    } finally {
+      setIsProcessing(false)
+    }
+  }, [onImageSelect, compressImage])
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()

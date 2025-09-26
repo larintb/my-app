@@ -32,6 +32,17 @@ interface BusinessWithStats extends Business {
   recentAppointments?: RecentAppointment[]
 }
 
+interface DemoRequest {
+  id: string
+  name: string
+  business_name: string
+  email: string
+  message?: string
+  status: 'pending' | 'contacted' | 'completed' | 'declined'
+  created_at: string
+  updated_at: string
+}
+
 export default function AdminDashboard() {
   // ALL HOOKS MUST BE AT THE TOP - BEFORE ANY CONDITIONAL RETURNS
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -48,6 +59,9 @@ export default function AdminDashboard() {
   const [showBusinesses, setShowBusinesses] = useState(false)
   const [selectedBusinessDetails, setSelectedBusinessDetails] = useState<BusinessWithStats | null>(null)
   const [loadingBusinessDetails, setLoadingBusinessDetails] = useState(false)
+  const [demoRequests, setDemoRequests] = useState<DemoRequest[]>([])
+  const [loadingDemoRequests, setLoadingDemoRequests] = useState(false)
+  const [showDemoRequests, setShowDemoRequests] = useState(false)
 
   const checkAuth = useCallback(() => {
     const savedUser = localStorage.getItem('superuser')
@@ -72,12 +86,90 @@ export default function AdminDashboard() {
     checkAuth()
   }, [checkAuth])
 
+  const loadDemoRequests = useCallback(async () => {
+    setLoadingDemoRequests(true)
+    try {
+      // Get superuser session for authentication
+      const savedUser = localStorage.getItem('superuser')
+      if (!savedUser) {
+        console.error('No superuser session found')
+        return
+      }
+
+      const response = await fetch('/api/demo-requests', {
+        headers: {
+          'x-superuser-session': savedUser,
+          'Content-Type': 'application/json'
+        }
+      })
+      const result = await response.json()
+
+      if (result.success) {
+        setDemoRequests(result.data)
+      } else {
+        console.error('Error loading demo requests:', result.error)
+        if (response.status === 401) {
+          // Unauthorized - redirect to login
+          setIsAuthenticated(false)
+          localStorage.removeItem('superuser')
+        }
+      }
+    } catch (error) {
+      console.error('Error loading demo requests:', error)
+    } finally {
+      setLoadingDemoRequests(false)
+    }
+  }, [])
+
+  const updateDemoRequestStatus = async (id: string, status: string) => {
+    try {
+      // Get superuser session for authentication
+      const savedUser = localStorage.getItem('superuser')
+      if (!savedUser) {
+        console.error('No superuser session found')
+        return
+      }
+
+      const response = await fetch('/api/demo-requests', {
+        method: 'PATCH',
+        headers: {
+          'x-superuser-session': savedUser,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id, status }),
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        // Update the local state
+        setDemoRequests(prev =>
+          prev.map(request =>
+            request.id === id
+              ? { ...request, status: status as DemoRequest['status'] }
+              : request
+          )
+        )
+      } else {
+        console.error('Error updating demo request:', result.error)
+        if (response.status === 401) {
+          // Unauthorized - redirect to login
+          setIsAuthenticated(false)
+          localStorage.removeItem('superuser')
+        }
+      }
+    } catch (error) {
+      console.error('Error updating demo request:', error)
+    }
+  }
+
   const handleLoginSuccess = (userData: User) => {
     setUser(userData)
     setIsAuthenticated(true)
     localStorage.setItem('superuser', JSON.stringify(userData))
     // Load data after successful login
     loadAdminData()
+    loadDemoRequests()
   }
 
   const loadAdminData = async () => {
@@ -230,6 +322,7 @@ export default function AdminDashboard() {
     navigator.clipboard.writeText(text)
     alert(`${type} copied to clipboard!`)
   }
+
 
 
   const loadBusinessDetails = async (businessId: string) => {
@@ -497,6 +590,153 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Demo Requests Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                📧 Solicitudes de Demo
+                {demoRequests.filter(req => req.status === 'pending').length > 0 && (
+                  <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                    {demoRequests.filter(req => req.status === 'pending').length}
+                  </span>
+                )}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setShowDemoRequests(!showDemoRequests)
+                  if (!showDemoRequests && demoRequests.length === 0) {
+                    loadDemoRequests()
+                  }
+                }}
+                loading={loadingDemoRequests}
+              >
+                {showDemoRequests ? 'Ocultar' : 'Ver Solicitudes'}
+              </Button>
+            </CardTitle>
+            <CardDescription>
+              Gestiona las solicitudes de demo del landing page
+            </CardDescription>
+          </CardHeader>
+          {showDemoRequests && (
+            <CardContent>
+              {loadingDemoRequests ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="animate-pulse">
+                      <div className="h-20 rounded-lg" style={{ backgroundColor: 'var(--bg-secondary)' }}></div>
+                    </div>
+                  ))}
+                </div>
+              ) : demoRequests.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="text-4xl mb-4">📭</div>
+                  <p style={{ color: 'var(--text-secondary)' }}>No hay solicitudes de demo</p>
+                </div>
+              ) : (
+                <div className="space-y-4 max-h-96 overflow-y-auto">
+                  {demoRequests.map((request) => (
+                    <div
+                      key={request.id}
+                      className="p-4 rounded-lg feature-card border"
+                      style={{ borderColor: request.status === 'pending' ? '#1DB954' : 'var(--border-color)' }}
+                    >
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-semibold" style={{ color: 'var(--text-primary)' }}>
+                              {request.name}
+                            </h4>
+                            <span
+                              className={`text-xs px-2 py-1 rounded-full ${
+                                request.status === 'pending'
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : request.status === 'contacted'
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : request.status === 'completed'
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}
+                            >
+                              {request.status === 'pending' && 'Pendiente'}
+                              {request.status === 'contacted' && 'Contactado'}
+                              {request.status === 'completed' && 'Completado'}
+                              {request.status === 'declined' && 'Rechazado'}
+                            </span>
+                          </div>
+                          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                            <strong>Negocio:</strong> {request.business_name}
+                          </p>
+                          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                            <strong>Email:</strong> {request.email}
+                          </p>
+                          {request.message && (
+                            <p className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>
+                              <strong>Mensaje:</strong> {request.message}
+                            </p>
+                          )}
+                          <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>
+                            {new Date(request.created_at).toLocaleDateString('es-ES', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2 flex-wrap">
+                        {request.status === 'pending' && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => updateDemoRequestStatus(request.id, 'contacted')}
+                              className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                            >
+                              Marcar como Contactado
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => updateDemoRequestStatus(request.id, 'declined')}
+                              className="text-red-600 border-red-600 hover:bg-red-50"
+                            >
+                              Rechazar
+                            </Button>
+                          </>
+                        )}
+                        {request.status === 'contacted' && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => updateDemoRequestStatus(request.id, 'completed')}
+                            className="text-green-600 border-green-600 hover:bg-green-50"
+                          >
+                            Marcar como Completado
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => window.open(`mailto:${request.email}`, '_blank')}
+                          className="text-gray-600 border-gray-600 hover:bg-gray-50"
+                        >
+                          Enviar Email
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          )}
+        </Card>
 
         {/* Stats/Overview Section */}
         <div className="grid gap-4 sm:grid-cols-4">

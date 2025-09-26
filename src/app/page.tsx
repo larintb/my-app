@@ -4,9 +4,20 @@ import React, { useState, useEffect } from 'react';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import { ClientThemeToggle } from '@/components/ui/ClientThemeToggle';
+import ElectricBorder from '@/components/ElectricBorder';
+import GlareHover from '@/components/GlareHover';
 
 export default function Home() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    business_name: '',
+    email: '',
+    message: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState('');
+  const [submitError, setSubmitError] = useState('');
 
   useEffect(() => {
     // Force scroll to top on page load/refresh
@@ -36,28 +47,14 @@ export default function Home() {
     if (element) {
       const headerHeight = 80; // Height of the sticky header
       const elementPosition = element.offsetTop - headerHeight;
-      const startPosition = window.pageYOffset;
-      const distance = elementPosition - startPosition;
-      const duration = 1000; // 1 second for smooth animation
-      let start: number | null = null;
 
-      const step = (timestamp: number) => {
-        if (!start) start = timestamp;
-        const progress = timestamp - start;
-        const progressPercentage = Math.min(progress / duration, 1);
-        
-        // Easing function for smoother animation (ease-in-out)
-        const easeInOutCubic = (t: number) => 
-          t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
-        
-        window.scrollTo(0, startPosition + (distance * easeInOutCubic(progressPercentage)));
-        
-        if (progress < duration) {
-          window.requestAnimationFrame(step);
-        }
-      };
-      
-      window.requestAnimationFrame(step);
+      // Use requestAnimationFrame for immediate response
+      requestAnimationFrame(() => {
+        window.scrollTo({
+          top: elementPosition,
+          behavior: 'smooth'
+        });
+      });
     }
   };
 
@@ -68,9 +65,12 @@ export default function Home() {
   };
 
   const handleHomeClick = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
+    // Instant smooth scroll to top with requestAnimationFrame
+    requestAnimationFrame(() => {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
     });
     closeMobileMenu();
   };
@@ -81,6 +81,45 @@ export default function Home() {
 
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    // Clear errors when user starts typing
+    if (submitError) setSubmitError('');
+    if (submitMessage) setSubmitMessage('');
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitError('');
+    setSubmitMessage('');
+
+    try {
+      const response = await fetch('/api/demo-requests', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setSubmitMessage(result.message);
+        setFormData({ name: '', business_name: '', email: '', message: '' }); // Reset form
+      } else {
+        setSubmitError(result.error || 'Error al enviar la solicitud');
+      }
+    } catch (error) {
+      console.error('Form submission error:', error);
+      setSubmitError('Error de conexión. Inténtalo de nuevo.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -292,25 +331,47 @@ export default function Home() {
                   <h3 className="text-2xl font-semibold" style={{ color: 'var(--text-primary)' }}>Inicial</h3>
                   <p className="mt-2" style={{ color: 'var(--text-secondary)' }}>Perfecto para individuos y pequeñas empresas.</p>
                   <div className="mt-6 flex items-baseline">
-                    <span className="text-5xl font-extrabold" style={{ color: 'var(--text-primary)' }}>$638</span>
+                    <span className="text-5xl font-extrabold" style={{ color: 'var(--text-primary)' }}>$1,200</span>
                     <span className="text-xl ml-2" style={{ color: 'var(--text-secondary)' }}>MXN / mes</span>
                   </div>
                   <ul className="mt-8 space-y-4" style={{ color: 'var(--text-secondary)' }}>
-                    <li className="flex items-center"><svg className="w-5 h-5 spotify-green-text mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>1 Tarjeta NFC Personalizada</li>
+                    <li className="flex items-center"><svg className="w-5 h-5 spotify-green-text mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>5 Tarjeta NFC para clientes</li>
                     <li className="flex items-center"><svg className="w-5 h-5 spotify-green-text mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>Centro de Negocios Online</li>
                     <li className="flex items-center"><svg className="w-5 h-5 spotify-green-text mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>Agendamiento de Citas</li>
                     <li className="flex items-center"><svg className="w-5 h-5 spotify-green-text mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>Listas de Servicios y Precios</li>
                   </ul>
                 </div>
-                <a href="#" className="block text-center w-full text-black font-semibold py-3 mt-8 rounded-full transition duration-300" style={{ backgroundColor: 'var(--text-muted)' }}>Elegir Inicial</a>
+                <a
+                  href="#contact"
+                  onClick={(e) => handleNavClick(e, 'contact')}
+                  className="block text-center w-full text-black font-semibold py-3 mt-8 rounded-full transition duration-300 cursor-pointer hover:opacity-80"
+                  style={{ backgroundColor: 'var(--text-muted)' }}
+                >
+                  Elegir Inicial
+                </a>
               </div>
               {/* Pro Plan */}
-              <div className="w-full max-w-md rounded-xl p-8 shadow-2xl transform lg:scale-105 border-2 border-green-500 flex flex-col feature-card" data-aos="fade-up" data-aos-delay="200">
+              <ElectricBorder
+                color="#22c55e"
+                speed={1}
+                chaos={0.3}
+                thickness={2}
+                style={{ borderRadius: 12 }}
+              >
+                <GlareHover
+                  glareColor="#ffffff"
+                  glareOpacity={0.3}
+                  glareAngle={-30}
+                  glareSize={300}
+                  transitionDuration={800}
+                  playOnce={false}
+                >
+                <div className="w-full max-w-md p-8 shadow-2xl transform lg:scale-105 flex flex-col feature-card" data-aos="fade-up" data-aos-delay="200">
                 <div className="flex-grow">
                   <h3 className="text-2xl font-semibold spotify-green-text">Pro</h3>
                   <p className="mt-2" style={{ color: 'var(--text-primary)' }}>Para empresas en crecimiento que necesitan más.</p>
                   <div className="mt-6 flex items-baseline">
-                    <span className="text-5xl font-extrabold" style={{ color: 'var(--text-primary)' }}>$1,298</span>
+                    <span className="text-5xl font-extrabold" style={{ color: 'var(--text-primary)' }}>$2,000</span>
                     <span className="text-xl ml-2" style={{ color: 'var(--text-secondary)' }}>MXN / mes</span>
                   </div>
                   <ul className="mt-8 space-y-4" style={{ color: 'var(--text-secondary)' }}>
@@ -320,9 +381,20 @@ export default function Home() {
                     <li className="flex items-center"><svg className="w-5 h-5 spotify-green-text mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>Soporte Prioritario</li>
                   </ul>
                 </div>
-                <a href="#" className="block text-center w-full spotify-green text-black font-semibold py-3 mt-8 rounded-full hover:bg-green-400 transition duration-300">Elegir Pro</a>
-              </div>
+                
+                <a
+                  href="#contact"
+                  onClick={(e) => handleNavClick(e, 'contact')}
+                  className="block text-center w-full spotify-green text-black font-semibold py-3 mt-8 rounded-full hover:bg-green-400 transition duration-300 cursor-pointer"
+                >
+                  Elegir Pro
+                </a>
+                
+                </div>
+                </GlareHover>
+              </ElectricBorder>
             </div>
+            
           </div>
         </section>
 
@@ -334,18 +406,78 @@ export default function Home() {
                 <h2 className="text-3xl md:text-4xl font-bold" style={{ color: 'var(--text-primary)' }}>¿Listo para Elevar tu Negocio?</h2>
                 <p className="mt-4" style={{ color: 'var(--text-secondary)' }}>Completa el formulario y nos pondremos en contacto para configurar tu sistema myCard.</p>
               </div>
-              <form>
+              <form onSubmit={handleSubmit}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                  <input type="text" placeholder="Tu Nombre" className="w-full px-4 py-3 rounded-lg form-input focus:outline-none focus:ring-2" style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }} />
-                  <input type="text" placeholder="Nombre del Negocio" className="w-full px-4 py-3 rounded-lg form-input focus:outline-none focus:ring-2" style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }} />
+                  <input
+                    type="text"
+                    name="name"
+                    placeholder="Tu Nombre"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-3 rounded-lg form-input focus:outline-none focus:ring-2"
+                    style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
+                  />
+                  <input
+                    type="text"
+                    name="business_name"
+                    placeholder="Nombre del Negocio"
+                    value={formData.business_name}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-3 rounded-lg form-input focus:outline-none focus:ring-2"
+                    style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
+                  />
                 </div>
                 <div className="mb-6">
-                  <input type="email" placeholder="Correo Electrónico" className="w-full px-4 py-3 rounded-lg form-input focus:outline-none focus:ring-2" style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }} />
+                  <input
+                    type="email"
+                    name="email"
+                    placeholder="Correo Electrónico"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-3 rounded-lg form-input focus:outline-none focus:ring-2"
+                    style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
+                  />
                 </div>
                 <div className="mb-6">
-                  <textarea placeholder="Cuéntanos sobre tu negocio..." rows={4} className="w-full px-4 py-3 rounded-lg form-input focus:outline-none focus:ring-2" style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}></textarea>
+                  <textarea
+                    name="message"
+                    placeholder="Cuéntanos sobre tu negocio..."
+                    value={formData.message}
+                    onChange={handleInputChange}
+                    rows={4}
+                    className="w-full px-4 py-3 rounded-lg form-input focus:outline-none focus:ring-2"
+                    style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
+                  ></textarea>
                 </div>
-                <button type="submit" className="w-full spotify-green text-black font-bold py-4 rounded-full hover:bg-green-400 transition duration-300 shadow-lg">Solicitar una Demo</button>
+
+                {/* Success message */}
+                {submitMessage && (
+                  <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+                    {submitMessage}
+                  </div>
+                )}
+
+                {/* Error message */}
+                {submitError && (
+                  <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                    {submitError}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className={`w-full text-black font-bold py-4 rounded-full transition duration-300 shadow-lg ${
+                    isSubmitting
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'spotify-green hover:bg-green-400'
+                  }`}
+                >
+                  {isSubmitting ? 'Enviando...' : 'Solicitar una Demo'}
+                </button>
               </form>
             </div>
           </div>
@@ -361,9 +493,33 @@ export default function Home() {
               <p className="mt-1" style={{ color: 'var(--text-muted)' }}>© 2025 myCard Services. Todos los derechos reservados.</p>
             </div>
             <div className="flex space-x-6">
-              <a href="#" className="transition duration-300 hover:text-green-500" style={{ color: 'var(--text-muted)' }}>Facebook</a>
-              <a href="#" className="transition duration-300 hover:text-green-500" style={{ color: 'var(--text-muted)' }}>Twitter</a>
-              <a href="#" className="transition duration-300 hover:text-green-500" style={{ color: 'var(--text-muted)' }}>LinkedIn</a>
+              <a
+                href="https://facebook.com/mycardservices"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition duration-300 hover:text-green-500"
+                style={{ color: 'var(--text-muted)' }}
+              >
+                Facebook
+              </a>
+              <a
+                href="https://twitter.com/mycardservices"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition duration-300 hover:text-green-500"
+                style={{ color: 'var(--text-muted)' }}
+              >
+                Twitter
+              </a>
+              <a
+                href="https://linkedin.com/company/mycardservices"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition duration-300 hover:text-green-500"
+                style={{ color: 'var(--text-muted)' }}
+              >
+                LinkedIn
+              </a>
             </div>
           </div>
         </div>
