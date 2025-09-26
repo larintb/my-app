@@ -55,10 +55,10 @@ export async function GET(request: Request, { params }: RouteParams) {
           name,
           price
         ),
-        client_businesses (
-          clients (
-            name
-          )
+        users!appointments_client_id_fkey (
+          id,
+          first_name,
+          last_name
         )
       `)
       .eq('business_id', businessId)
@@ -75,8 +75,10 @@ export async function GET(request: Request, { params }: RouteParams) {
       .from('client_businesses')
       .select(`
         *,
-        clients (
-          name,
+        users!client_businesses_client_id_fkey (
+          id,
+          first_name,
+          last_name,
           created_at
         )
       `)
@@ -117,15 +119,15 @@ export async function GET(request: Request, { params }: RouteParams) {
       monthData.revenue += apt.services?.price || 0
       monthData.appointments += 1
 
-      if (apt.client_businesses?.clients) {
-        monthData.clientIds.add(apt.client_businesses.clients.id)
+      if (apt.users?.id) {
+        monthData.clientIds.add(apt.users.id)
       }
     })
 
     // Count new clients per month
     clientBusinesses?.forEach(cb => {
-      if (cb.clients?.created_at) {
-        const date = new Date(cb.clients.created_at)
+      if (cb.users?.created_at) {
+        const date = new Date(cb.users.created_at)
         const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
 
         if (monthlyMap.has(monthKey)) {
@@ -168,8 +170,8 @@ export async function GET(request: Request, { params }: RouteParams) {
     const returningClients = new Set()
 
     appointments?.forEach(apt => {
-      if (apt.client_businesses?.clients) {
-        const clientId = apt.client_businesses.clients.id
+      if (apt.users?.id) {
+        const clientId = apt.users.id
         if (clientsInRange.has(clientId)) {
           returningClients.add(clientId)
         } else {

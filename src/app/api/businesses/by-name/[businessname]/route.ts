@@ -2,13 +2,13 @@ import { NextResponse } from 'next/server'
 import { getBusinessByName } from '@/lib/db/businesses'
 
 interface RouteParams {
-  params: Promise<{ name: string }>
+  params: Promise<{ businessname: string }>
 }
 
 export async function GET(request: Request, { params }: RouteParams) {
   try {
     const resolvedParams = await params
-    const businessName = decodeURIComponent(resolvedParams.name)
+    const businessName = decodeURIComponent(resolvedParams.businessname)
 
     const business = await getBusinessByName(businessName)
 

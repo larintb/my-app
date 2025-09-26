@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import Image from 'next/image'
 import { Business, Service, User } from '@/types'
 import { DynamicCalendar } from './DynamicCalendar'
 import { GoogleMap } from '../ui/GoogleMap'
@@ -242,6 +243,14 @@ export function ClientAppointmentInterface({
     return days[dayOfWeek]
   }
 
+  const getCurrentDayOfWeek = () => {
+    return new Date().getDay()
+  }
+
+  const isToday = (dayOfWeek: number) => {
+    return dayOfWeek === getCurrentDayOfWeek()
+  }
+
   const renderNavigation = () => (
     <div className="bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 shadow-lg sticky top-0 z-50">
       {/* Gradient overlay for smoother effect */}
@@ -250,11 +259,21 @@ export function ClientAppointmentInterface({
       <div className="relative px-4 py-4 safe-area-top">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            {/* Animated business avatar */}
-            <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center ring-2 ring-white/30 shadow-lg">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 8v-3a1 1 0 011-1h2a1 1 0 011 1v3" />
-              </svg>
+            {/* Business logo or fallback avatar */}
+            <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center ring-2 ring-white/30 shadow-lg overflow-hidden">
+              {business.business_image_url ? (
+                <Image
+                  src={business.business_image_url}
+                  alt={`Logo de ${business.business_name}`}
+                  width={40}
+                  height={40}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 8v-3a1 1 0 011-1h2a1 1 0 011 1v3" />
+                </svg>
+              )}
             </div>
             <div className="text-white">
               <h1 className="font-bold text-lg leading-tight">{business.business_name}</h1>
@@ -284,10 +303,20 @@ export function ClientAppointmentInterface({
       {/* Welcome section with improved mobile design */}
       <div className="pt-6 pb-8 text-center">
         <div className="mb-6">
-          <div className="w-20 h-20 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full mx-auto flex items-center justify-center shadow-lg mb-4">
-            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+          <div className="w-20 h-20 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full mx-auto flex items-center justify-center shadow-lg mb-4 overflow-hidden">
+            {business.business_image_url ? (
+              <Image
+                src={business.business_image_url}
+                alt={`Logo de ${business.business_name}`}
+                width={80}
+                height={80}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            )}
           </div>
         </div>
         <h2 className="text-2xl font-bold text-gray-900 mb-2">
@@ -769,18 +798,53 @@ export function ClientAppointmentInterface({
             {loadingHours ? (
               <div className="text-gray-500">Cargando horarios...</div>
             ) : businessHours.length > 0 ? (
-              <div className="space-y-2">
-                {businessHours.map((hour) => (
-                  <div key={hour.id} className="flex justify-between text-sm">
-                    <span className="text-gray-700">{getDayName(hour.day_of_week)}</span>
-                    <span className="text-gray-600">
-                      {hour.is_active 
-                        ? `${formatTime(hour.open_time)} - ${formatTime(hour.close_time)}`
-                        : 'Cerrado'
-                      }
-                    </span>
-                  </div>
-                ))}
+              <div className="space-y-1">
+                {businessHours.map((hour) => {
+                  const isTodayHour = isToday(hour.day_of_week)
+                  return (
+                    <div
+                      key={hour.id}
+                      className={`flex items-center justify-between py-3 px-4 rounded-lg transition-colors ${
+                        isTodayHour
+                          ? 'bg-green-50 border border-green-200'
+                          : 'hover:bg-gray-50'
+                      }`}
+                    >
+                      {/* Left side: Day name + Today badge */}
+                      <div className="flex items-center space-x-3">
+                        <span
+                          className={`text-sm w-24 ${
+                            isTodayHour
+                              ? 'text-green-800 font-bold'
+                              : 'text-gray-700 font-medium'
+                          }`}
+                          style={{ textAlign: 'left' }}
+                        >
+                          {getDayName(hour.day_of_week)}
+                        </span>
+                        {isTodayHour && (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-green-600 text-white">
+                            Hoy
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Right side: Hours */}
+                      <div className="text-right">
+                        <span className={`text-sm ${
+                          isTodayHour
+                            ? 'text-green-700 font-bold'
+                            : 'text-gray-600 font-medium'
+                        }`}>
+                          {hour.is_active
+                            ? `${formatTime(hour.open_time)} - ${formatTime(hour.close_time)}`
+                            : 'Cerrado'
+                          }
+                        </span>
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             ) : (
               <div className="text-gray-500">No hay horarios configurados</div>
@@ -795,7 +859,12 @@ export function ClientAppointmentInterface({
           </div>
           <div className="h-80">
             {business.address ? (
-              <GoogleMap address={business.address} businessName={business.business_name} />
+              <GoogleMap
+                key={`${business.address}-${business.business_name}`} // Force re-render when address or business name changes
+                address={business.address}
+                businessName={business.business_name}
+                className="h-full w-full"
+              />
             ) : (
               <div className="h-full flex items-center justify-center text-gray-500">
                 <div className="text-center">

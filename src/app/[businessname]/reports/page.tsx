@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { ClientThemeToggle } from '@/components/ui/ClientThemeToggle'
-import { BusinessAdminUser } from '@/utils/auth'
+import { BusinessAdminUser, requireBusinessAdminAuth } from '@/utils/auth'
 
 interface PageProps {
   params: Promise<{ businessname: string }>
@@ -59,32 +59,23 @@ export default function ReportsPage({ params }: PageProps) {
     }
   }, [dateRange])
 
-  const checkAuth = useCallback(() => {
-    const savedUser = localStorage.getItem('businessAdmin')
-    if (savedUser) {
-      try {
-        const userData = JSON.parse(savedUser)
-        setUser(userData)
-        loadReportData(userData.businessId)
-      } catch {
-        localStorage.removeItem('businessAdmin')
-        router.push(`/${businessName}/login`)
-      }
-    } else {
-      router.push(`/${businessName}/login`)
-    }
-    setIsLoading(false)
-  }, [businessName, router, loadReportData])
 
   useEffect(() => {
     const getParams = async () => {
       const resolvedParams = await params
-      setBusinessName(decodeURIComponent(resolvedParams.businessname))
-      checkAuth()
-    }
+      const businessNameDecoded = decodeURIComponent(resolvedParams.businessname)
+      setBusinessName(businessNameDecoded)
 
+      // Wait for businessName to be set before checking auth
+      const user = await requireBusinessAdminAuth(businessNameDecoded, router)
+      if (user) {
+        setUser(user)
+        loadReportData(user.businessId)
+      }
+      setIsLoading(false)
+    }
     getParams()
-  }, [params, checkAuth])
+  }, [params, router, loadReportData])
 
   useEffect(() => {
     if (user?.businessId) {

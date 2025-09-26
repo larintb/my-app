@@ -14,10 +14,11 @@ export async function GET() {
       throw businessError
     }
 
-    // Get clients count
+    // Get clients count (users with role 'final_client')
     const { count: clientCount, error: clientError } = await supabaseAdmin
-      .from('clients')
+      .from('users')
       .select('*', { count: 'exact', head: true })
+      .eq('role', 'final_client')
 
     if (clientError) {
       console.error('Error counting clients:', clientError)

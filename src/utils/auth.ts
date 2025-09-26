@@ -51,13 +51,37 @@ interface Router {
   push: (path: string) => void
 }
 
-// Redirect to login if not authenticated
-export function requireBusinessAdminAuth(businessName: string, router: Router): BusinessAdminUser | null {
+// Get business by business name
+async function getBusinessByName(businessName: string) {
+  try {
+    const response = await fetch(`/api/businesses/by-name/${encodeURIComponent(businessName)}`)
+    const data = await response.json()
+    if (data.success) {
+      return data.business
+    }
+  } catch (error) {
+    console.error('Error fetching business:', error)
+  }
+  return null
+}
+
+// Redirect to login if not authenticated or user doesn't belong to this business
+export async function requireBusinessAdminAuth(businessName: string, router: Router): Promise<BusinessAdminUser | null> {
   const user = getBusinessAdminSession()
   if (!user) {
     clearBusinessAdminSession()
     router.push(`/${businessName}/login`)
     return null
   }
+
+  // Validate that user belongs to this specific business
+  const business = await getBusinessByName(businessName)
+  if (!business || business.id !== user.businessId) {
+    // User doesn't belong to this business - clear session and redirect
+    clearBusinessAdminSession()
+    router.push(`/${businessName}/login`)
+    return null
+  }
+
   return user
 }

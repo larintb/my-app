@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { Business, Service, BusinessHours } from '@/types'
 
 interface BusinessLandingPageProps {
@@ -67,9 +68,11 @@ export function BusinessLandingPage({
           {business.business_image_url && (
             <div className="mb-6">
               <div className="relative inline-block">
-                <img
+                <Image
                   src={business.business_image_url}
                   alt={business.business_name}
+                  width={128}
+                  height={128}
                   className="mx-auto h-32 w-32 rounded-full object-cover shadow-xl border-4 border-white"
                 />
                 <div 

@@ -175,27 +175,30 @@ export async function getAppointmentStats(businessId: string) {
 
     if (pendingError) throw pendingError
 
-    // Get today's revenue (completed appointments)
+    // Get this month's revenue (completed appointments)
     const { data: revenueData, error: revenueError } = await supabaseAdmin
       .from('appointments')
       .select(`
-        services (price)
+        services (
+          price
+        )
       `)
       .eq('business_id', businessId)
-      .eq('appointment_date', todayLocal)
+      .gte('appointment_date', startOfMonthLocal)
       .eq('status', 'completed')
 
     if (revenueError) throw revenueError
 
-    const todayRevenue = revenueData?.reduce((total, appointment) => {
-      return total + (appointment.services?.[0]?.price || 0)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const monthlyRevenue = (revenueData as any[])?.reduce((total: number, appointment: { services?: { price?: number } }) => {
+      return total + (appointment.services?.price || 0)
     }, 0) || 0
 
     return {
       todayAppointments: todayData?.length || 0,
       monthlyAppointments: monthData?.length || 0,
       pendingAppointments: pendingData?.length || 0,
-      todayRevenue: todayRevenue
+      monthlyRevenue: monthlyRevenue
     }
   } catch (error) {
     console.error('Error fetching appointment stats:', error)
@@ -203,7 +206,7 @@ export async function getAppointmentStats(businessId: string) {
       todayAppointments: 0,
       monthlyAppointments: 0,
       pendingAppointments: 0,
-      todayRevenue: 0
+      monthlyRevenue: 0
     }
   }
 }

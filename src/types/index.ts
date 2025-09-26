@@ -119,7 +119,7 @@ export interface DashboardStats {
   todayAppointments: number
   totalClients: number
   servicesOffered: number
-  todayRevenue: number
+  monthlyRevenue: number
   monthlyAppointments: number
   pendingAppointments: number
 }

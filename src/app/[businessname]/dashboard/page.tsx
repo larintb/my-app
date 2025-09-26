@@ -52,24 +52,24 @@ export default function BusinessDashboard({ params }: PageProps) {
     }
   }, [])
 
-  const checkAuth = useCallback(() => {
-    const user = requireBusinessAdminAuth(businessName, router)
-    if (user) {
-      setUser(user)
-      loadDashboardData(user.businessId)
-    }
-    setIsLoading(false)
-  }, [businessName, router, loadDashboardData])
 
   useEffect(() => {
     const getParams = async () => {
       const resolvedParams = await params
-      setBusinessName(decodeURIComponent(resolvedParams.businessname))
-      checkAuth()
+      const businessNameDecoded = decodeURIComponent(resolvedParams.businessname)
+      setBusinessName(businessNameDecoded)
+
+      // Wait for businessName to be set before checking auth
+      const user = await requireBusinessAdminAuth(businessNameDecoded, router)
+      if (user) {
+        setUser(user)
+        loadDashboardData(user.businessId)
+      }
+      setIsLoading(false)
     }
 
     getParams()
-  }, [params, checkAuth])
+  }, [params, router, loadDashboardData])
 
   const handleLogout = () => {
     setUser(null)
@@ -183,8 +183,8 @@ export default function BusinessDashboard({ params }: PageProps) {
                     </div>
                   ) : (
                     <>
-                      <div className="text-2xl font-bold accent-text">${stats?.todayRevenue?.toFixed(2) || '0.00'}</div>
-                      <div className="text-sm text-muted">Ingresos de Hoy</div>
+                      <div className="text-2xl font-bold accent-text">${stats?.monthlyRevenue?.toFixed(2) || '0.00'}</div>
+                      <div className="text-sm text-muted">Ingresos del Mes</div>
                     </>
                   )}
                 </div>

@@ -6,8 +6,10 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { AddressAutocomplete, AddressDetails } from '@/components/ui/AddressAutocomplete'
+import { GoogleMap } from '@/components/ui/GoogleMap'
 import { ClientThemeToggle } from '@/components/ui/ClientThemeToggle'
-import { BusinessAdminUser } from '@/utils/auth'
+import { ImageUploader } from '@/components/ui/ImageUploader'
+import { BusinessAdminUser, requireBusinessAdminAuth } from '@/utils/auth'
 
 interface PageProps {
   params: Promise<{ businessname: string }>
@@ -41,6 +43,9 @@ export default function BusinessSettingsPage({ params }: PageProps) {
   })
   const [formErrors, setFormErrors] = useState<FormErrors>({})
   const [addressDetails, setAddressDetails] = useState<AddressDetails | null>(null)
+  const [selectedImage, setSelectedImage] = useState<File | null>(null)
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null)
+  const [uploadingImage, setUploadingImage] = useState(false)
 
 
 
@@ -67,32 +72,24 @@ export default function BusinessSettingsPage({ params }: PageProps) {
     }
   }, [])
 
-  const checkAuth = useCallback(() => {
-    const savedUser = localStorage.getItem('businessAdmin')
-    if (savedUser) {
-      try {
-        const userData = JSON.parse(savedUser)
-        setUser(userData)
-        loadBusinessData(userData.businessId)
-      } catch {
-        localStorage.removeItem('businessAdmin')
-        router.push(`/${businessName}/login`)
-      }
-    } else {
-      router.push(`/${businessName}/login`)
-    }
-    setIsLoading(false)
-  }, [businessName, router, loadBusinessData])
 
   useEffect(() => {
     const getParams = async () => {
       const resolvedParams = await params
-      setBusinessName(decodeURIComponent(resolvedParams.businessname))
-      checkAuth()
+      const businessNameDecoded = decodeURIComponent(resolvedParams.businessname)
+      setBusinessName(businessNameDecoded)
+
+      // Wait for businessName to be set before checking auth
+      const user = await requireBusinessAdminAuth(businessNameDecoded, router)
+      if (user) {
+        setUser(user)
+        loadBusinessData(user.businessId)
+      }
+      setIsLoading(false)
     }
 
     getParams()
-  }, [params, checkAuth])
+  }, [params, router, loadBusinessData])
 
   const handleInputChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData(prev => ({ ...prev, [field]: e.target.value }))
@@ -108,6 +105,45 @@ export default function BusinessSettingsPage({ params }: PageProps) {
     // Clear address error when address is selected
     if (formErrors.address) {
       setFormErrors((prev) => ({ ...prev, address: '' }))
+    }
+  }
+
+  const handleImageSelect = (file: File, previewUrl: string) => {
+    setSelectedImage(file)
+    setImagePreviewUrl(previewUrl)
+  }
+
+  const handleImageRemove = () => {
+    setSelectedImage(null)
+    setImagePreviewUrl(null)
+  }
+
+  const uploadBusinessImage = async (businessId: string): Promise<string | null> => {
+    if (!selectedImage) return null
+
+    setUploadingImage(true)
+    try {
+      const formDataUpload = new FormData()
+      formDataUpload.append('file', selectedImage)
+      formDataUpload.append('businessId', businessId)
+
+      const response = await fetch('/api/upload/business-image', {
+        method: 'POST',
+        body: formDataUpload
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to upload image')
+      }
+
+      return data.url
+    } catch (error) {
+      console.error('Image upload error:', error)
+      throw error
+    } finally {
+      setUploadingImage(false)
     }
   }
 
@@ -133,11 +169,26 @@ export default function BusinessSettingsPage({ params }: PageProps) {
 
     setIsSaving(true)
     try {
+      // Upload image first if there's one selected
+      let imageUrl = formData.business_image_url
+      if (selectedImage) {
+        try {
+          const uploadedUrl = await uploadBusinessImage(user.businessId)
+          if (uploadedUrl) {
+            imageUrl = uploadedUrl
+          }
+        } catch (imageError) {
+          console.error('Image upload failed:', imageError)
+          alert('Error al subir la imagen, pero se guardarán los demás cambios')
+        }
+      }
+
       const response = await fetch(`/api/businesses/${user.businessId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
+          business_image_url: imageUrl,
           // Include address details if available
           ...(addressDetails && {
             address_details: {
@@ -157,6 +208,10 @@ export default function BusinessSettingsPage({ params }: PageProps) {
 
       if (data.success) {
         alert('¡Configuraciones del negocio guardadas exitosamente!')
+
+        // Clear selected image after successful save
+        setSelectedImage(null)
+        setImagePreviewUrl(null)
 
         await loadBusinessData(user.businessId)
       } else {
@@ -205,10 +260,15 @@ export default function BusinessSettingsPage({ params }: PageProps) {
               <ClientThemeToggle />
               <Button
                 onClick={saveBusinessSettings}
-                loading={isSaving}
+                loading={isSaving || uploadingImage}
                 className="btn-primary"
               >
-                Guardar Configuraciones
+                {uploadingImage
+                  ? 'Subiendo imagen...'
+                  : isSaving
+                  ? 'Guardando...'
+                  : 'Guardar Configuraciones'
+                }
               </Button>
             </div>
           </div>
@@ -268,25 +328,34 @@ export default function BusinessSettingsPage({ params }: PageProps) {
                       placeholder="+1 (555) 123-4567"
                       required
                     />
-                    <Input
-                      label="Business Image URL (optional)"
-                      value={formData.business_image_url}
-                      onChange={handleInputChange('business_image_url')}
-                      placeholder="https://example.com/logo.png"
-                    />
+                    <div>
+                      <label className="block text-sm font-medium text-app mb-2">
+                        Logo del Negocio (Opcional)
+                      </label>
+                      <ImageUploader
+                        onImageSelect={handleImageSelect}
+                        onImageRemove={handleImageRemove}
+                        currentImageUrl={imagePreviewUrl || formData.business_image_url || undefined}
+                        disabled={isSaving || uploadingImage}
+                        className="w-full"
+                      />
+                      <p className="mt-1 text-xs text-muted">
+                        Sube una imagen que represente tu negocio. Recomendado: 800x800px, máximo 5MB.
+                      </p>
+                    </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-app mb-2">
                       Business Address *
                     </label>
+                    {/* Address autocomplete component */}
                     <AddressAutocomplete
                       onAddressSelect={handleAddressSelect}
                       placeholder="Busca y actualiza la dirección de tu negocio..."
                       initialValue={formData.address}
                       disabled={isSaving}
                       className="w-full"
-                      darkMode={false}
                     />
                     {formErrors.address && (
                       <p className="mt-1 text-sm" style={{ color: 'var(--danger-color)' }}>{formErrors.address}</p>
@@ -325,16 +394,41 @@ export default function BusinessSettingsPage({ params }: PageProps) {
                 </CardContent>
               </Card>
 
+              {/* Map Preview Card */}
+              {formData.address && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Previsualización del Mapa</CardTitle>
+                    <CardDescription>
+                      Vista previa de la ubicación de tu negocio en el mapa
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <GoogleMap
+                      key={`${formData.address}-${formData.business_name}`} // Force re-render when address or business name changes
+                      address={formData.address}
+                      businessName={formData.business_name || 'Tu Negocio'}
+                      className="h-80 w-full"
+                    />
+                  </CardContent>
+                </Card>
+              )}
+
 
               {/* Save Button */}
               <div className="flex justify-center">
                 <Button
                   onClick={saveBusinessSettings}
-                  loading={isSaving}
+                  loading={isSaving || uploadingImage}
                   className="btn-primary"
                   size="lg"
                 >
-                  Save All Settings
+                  {uploadingImage
+                    ? 'Subiendo imagen...'
+                    : isSaving
+                    ? 'Guardando...'
+                    : 'Guardar Configuraciones'
+                  }
                 </Button>
               </div>
             </>

@@ -39,7 +39,7 @@ export async function POST(request: Request) {
       }, { status: 400 })
     }
 
-    const responseData: { success: boolean; token: { id: string; type: string; status: string; expires_at: string | null }; business?: { id: string; business_name: string; slug: string }; user?: { id: string; first_name?: string; last_name?: string; phone?: string; role?: string }; isRegistered?: boolean } = {
+    const responseData: { success: boolean; token: { id: string; type: string; status: string; expires_at: string | null }; business?: { id: string; business_name: string; owner_name: string; phone: string; address: string; business_image_url: string | null; theme_settings: object; slug: string }; user?: { id: string; first_name?: string; last_name?: string; phone?: string; role?: string }; isRegistered?: boolean } = {
       success: true,
       token: {
         id: tokenData.id,
@@ -56,6 +56,11 @@ export async function POST(request: Request) {
         responseData.business = {
           id: tokenWithBusiness.business.id,
           business_name: tokenWithBusiness.business.business_name,
+          owner_name: tokenWithBusiness.business.owner_name,
+          phone: tokenWithBusiness.business.phone,
+          address: tokenWithBusiness.business.address,
+          business_image_url: tokenWithBusiness.business.business_image_url || null,
+          theme_settings: tokenWithBusiness.business.theme_settings || {},
           slug: tokenWithBusiness.business.business_name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
         }
       }

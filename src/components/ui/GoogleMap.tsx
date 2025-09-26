@@ -1,7 +1,7 @@
 'use client'
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useRef, useState } from 'react'
-import { loadGoogleMaps } from '@/utils/googleMaps'
 
 interface GoogleMapProps {
   address: string
@@ -14,29 +14,76 @@ export function GoogleMap({ address, businessName, className = '' }: GoogleMapPr
   const [isLoaded, setIsLoaded] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    const loadAndInitializeMap = async () => {
-      try {
-        await loadGoogleMaps()
-        setIsLoaded(true)
-        initializeMap()
-      } catch (error) {
-        console.error('Error loading Google Maps:', error)
-        setError('Error loading Google Maps')
+  // Global script loading state
+  const loadGoogleMaps = async () => {
+    if ((window as any).google && (window as any).google.maps) {
+      return Promise.resolve()
+    }
+
+    // Check if script is already being loaded
+    if ((window as typeof window & { googleMapsLoading?: Promise<void> }).googleMapsLoading) {
+      return (window as typeof window & { googleMapsLoading?: Promise<void> }).googleMapsLoading
+    }
+
+    // Check if script is already in the page
+    const existingScript = document.querySelector('script[src*="maps.googleapis.com"]')
+    if (existingScript) {
+      return new Promise<void>((resolve) => {
+        const checkGoogleMaps = () => {
+          if ((window as any).google && (window as any).google.maps) {
+            resolve()
+          } else {
+            setTimeout(checkGoogleMaps, 100)
+          }
+        }
+        checkGoogleMaps()
+      })
+    }
+
+    // Create and store the loading promise
+    const loadingPromise = new Promise<void>((resolve, reject) => {
+      const script = document.createElement('script')
+      const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+
+      if (!apiKey) {
+        reject(new Error('Google Maps API key not found'))
+        return
       }
+
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`
+      script.async = true
+      script.onload = () => {
+        delete (window as typeof window & { googleMapsLoading?: Promise<void> }).googleMapsLoading
+        resolve()
+      }
+      script.onerror = () => {
+        delete (window as typeof window & { googleMapsLoading?: Promise<void> }).googleMapsLoading
+        reject(new Error('Failed to load Google Maps'))
+      }
+      document.head.appendChild(script)
+    })
+
+    ;(window as typeof window & { googleMapsLoading?: Promise<void> }).googleMapsLoading = loadingPromise
+    return loadingPromise
+  }
+
+  useEffect(() => {
+    if (!address || !address.trim()) {
+      setError(null)
+      setIsLoaded(false)
+      return
     }
 
     const initializeMap = async () => {
-      if (!mapRef.current || !window.google) return
-
       try {
-        // Initialize geocoder
-        const geocoder = new window.google.maps.Geocoder()
+        await loadGoogleMaps()
+
+        if (!mapRef.current) return
+
+        const geocoder = new (window as any).google.maps.Geocoder()
 
         // Geocode the address
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const results = await new Promise<any[]>((resolve, reject) => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const result = await new Promise<any[]>((resolve, reject) => {
           geocoder.geocode({ address }, (results: any, status: any) => {
             if (status === 'OK' && results) {
               resolve(results)
@@ -46,107 +93,100 @@ export function GoogleMap({ address, businessName, className = '' }: GoogleMapPr
           })
         })
 
-        if (results.length === 0) {
-          throw new Error('No results found for the address')
+        if (result.length === 0) {
+          throw new Error('No results found for address')
         }
 
-        const location = results[0].geometry.location
+        const location = result[0].geometry.location
 
-        // Create map
-        const map = new window.google.maps.Map(mapRef.current, {
+        // Create map with null check
+        if (!mapRef.current) {
+          throw new Error('Map container not found')
+        }
+
+        const map = new (window as any).google.maps.Map(mapRef.current, {
           zoom: 15,
           center: location,
           mapTypeControl: false,
           streetViewControl: false,
           fullscreenControl: true,
           zoomControl: true,
-          styles: [
-            {
-              "featureType": "poi",
-              "elementType": "labels",
-              "stylers": [{"visibility": "off"}]
-            }
-          ]
         })
 
-        // Get theme colors from CSS variables
-        const themeColor = getComputedStyle(document.documentElement).getPropertyValue('--theme-primary').trim() || '#3B82F6'
-
-        // Add marker
-        const marker = new window.google.maps.Marker({
+        // Create marker
+        const marker = new (window as any).google.maps.Marker({
           position: location,
           map: map,
           title: businessName,
-          icon: {
-            url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-              <svg width="30" height="40" viewBox="0 0 30 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M15 0C6.71573 0 0 6.71573 0 15C0 23.2843 15 40 15 40C15 40 30 23.2843 30 15C30 6.71573 23.2843 0 15 0Z" fill="${themeColor}"/>
-                <circle cx="15" cy="15" r="8" fill="white"/>
-                <circle cx="15" cy="15" r="4" fill="${themeColor}"/>
-              </svg>
-            `),
-            scaledSize: new window.google.maps.Size(30, 40),
-            anchor: new window.google.maps.Point(15, 40)
-          }
         })
 
-        // Add info window
-        const infoWindow = new window.google.maps.InfoWindow({
+        // Create info window
+        const infoWindow = new (window as any).google.maps.InfoWindow({
           content: `
             <div style="padding: 8px; max-width: 200px;">
-              <h3 style="margin: 0 0 4px 0; font-size: 14px; font-weight: bold; color: #1f2937;">${businessName}</h3>
-              <p style="margin: 0; font-size: 12px; color: #6b7280; line-height: 1.4;">${address}</p>
-              <a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}"
+              <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: bold;">${businessName}</h3>
+              <p style="margin: 0 0 8px 0; font-size: 14px; color: #666;">${address}</p>
+              <a href="https://www.(window as any).google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}"
                  target="_blank"
-                 style="display: inline-block; margin-top: 8px; padding: 4px 8px; background: ${themeColor}; color: white; text-decoration: none; border-radius: 4px; font-size: 11px;">
-                Abrir en Google Maps
+                 style="display: inline-block; padding: 4px 8px; background: #1976d2; color: white; text-decoration: none; border-radius: 4px; font-size: 12px;">
+                Cómo llegar
               </a>
             </div>
           `
         })
 
-        // Open info window when marker is clicked
+        // Show info window when marker is clicked
         marker.addListener('click', () => {
           infoWindow.open(map, marker)
         })
 
+        setIsLoaded(true)
+        setError(null)
+
       } catch (error) {
         console.error('Error initializing map:', error)
-        setError('Error loading map location')
+        setError('No se pudo cargar el mapa para esta dirección')
+        setIsLoaded(false)
       }
     }
 
-    loadAndInitializeMap()
+    initializeMap()
   }, [address, businessName])
 
   if (error) {
     return (
-      <div className={`rounded-lg p-4 text-center ${className}`} style={{ backgroundColor: 'var(--foreground, #f1f5f9)' }}>
-        <div className="mb-2" style={{ color: 'var(--text-color, #64748b)' }}>
-          <svg className="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className={`${className} h-64 rounded-lg p-6 text-center flex flex-col justify-center bg-gray-50 border-2 border-dashed border-gray-300`}>
+        <div className="mb-4">
+          <svg className="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
         </div>
-        <p className="text-sm mb-3" style={{ color: 'var(--text-color, #64748b)' }}>{error}</p>
-        <a
-          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-block px-3 py-2 rounded text-sm transition-colors"
-          style={{
-            backgroundColor: 'var(--theme-primary, #3b82f6)',
-            color: 'var(--background, #ffffff)'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = 'var(--theme-primary-dark, #2563eb)'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'var(--theme-primary, #3b82f6)'
-          }}
-        >
-          Ver en Google Maps
-        </a>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">{businessName}</h3>
+        <p className="text-sm text-gray-600 mb-4">{address}</p>
+        <div className="space-y-2">
+          <a
+            href={`https://www.(window as any).google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+          >
+            Ver en Google Maps
+          </a>
+        </div>
+      </div>
+    )
+  }
+
+  if (!address || !address.trim()) {
+    return (
+      <div className={`${className} h-64 rounded-lg p-6 text-center flex flex-col justify-center bg-gray-50 border-2 border-dashed border-gray-300`}>
+        <div className="mb-4">
+          <svg className="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+          </svg>
+        </div>
+        <p className="text-gray-500">No hay dirección para mostrar</p>
       </div>
     )
   }
@@ -155,19 +195,16 @@ export function GoogleMap({ address, businessName, className = '' }: GoogleMapPr
     <div className={`relative ${className}`}>
       <div
         ref={mapRef}
-        className="w-full h-full min-h-[200px] rounded-lg overflow-hidden"
-        style={{ minHeight: '200px' }}
+        className="w-full h-full min-h-[300px] rounded-lg overflow-hidden"
       />
       {!isLoaded && (
-        <div className="absolute inset-0 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'var(--foreground, #f1f5f9)' }}>
+        <div className="absolute inset-0 rounded-lg flex items-center justify-center bg-gray-100">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 mx-auto mb-2" style={{ borderBottomColor: 'var(--theme-primary, #3b82f6)' }}></div>
-            <p className="text-sm" style={{ color: 'var(--text-color, #64748b)' }}>Cargando mapa...</p>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+            <p className="text-sm text-gray-600">Cargando mapa...</p>
           </div>
         </div>
       )}
     </div>
   )
 }
-
-// Google Maps types are declared in AddressAutocomplete.tsx

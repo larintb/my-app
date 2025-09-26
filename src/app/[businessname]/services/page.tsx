@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { ClientThemeToggle } from '@/components/ui/ClientThemeToggle'
-import { BusinessAdminUser } from '@/utils/auth'
+import { BusinessAdminUser, requireBusinessAdminAuth } from '@/utils/auth'
 
 interface PageProps {
   params: Promise<{ businessname: string }>
@@ -64,32 +64,23 @@ export default function ServicesPage({ params }: PageProps) {
     }
   }, [])
 
-  const checkAuth = useCallback(() => {
-    const savedUser = localStorage.getItem('businessAdmin')
-    if (savedUser) {
-      try {
-        const userData = JSON.parse(savedUser)
-        setUser(userData)
-        loadServices(userData.businessId)
-      } catch {
-        localStorage.removeItem('businessAdmin')
-        router.push(`/${businessName}/login`)
-      }
-    } else {
-      router.push(`/${businessName}/login`)
-    }
-    setIsLoading(false)
-  }, [businessName, router, loadServices])
 
   useEffect(() => {
     const getParams = async () => {
       const resolvedParams = await params
-      setBusinessName(decodeURIComponent(resolvedParams.businessname))
-      checkAuth()
-    }
+      const businessNameDecoded = decodeURIComponent(resolvedParams.businessname)
+      setBusinessName(businessNameDecoded)
 
+      // Wait for businessName to be set before checking auth
+      const user = await requireBusinessAdminAuth(businessNameDecoded, router)
+      if (user) {
+        setUser(user)
+        loadServices(user.businessId)
+      }
+      setIsLoading(false)
+    }
     getParams()
-  }, [params, checkAuth])
+  }, [params, router, loadServices])
 
   const handleInputChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData(prev => ({ ...prev, [field]: e.target.value }))

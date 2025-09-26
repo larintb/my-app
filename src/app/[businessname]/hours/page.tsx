@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { ClientThemeToggle } from '@/components/ui/ClientThemeToggle'
-import { BusinessAdminUser } from '@/utils/auth'
+import { BusinessAdminUser, requireBusinessAdminAuth } from '@/utils/auth'
 
 interface PageProps {
   params: Promise<{ businessname: string }>
@@ -34,10 +34,29 @@ export default function BusinessHoursPage({ params }: PageProps) {
 
   // Note: formatTimeForDisplay function removed as it was unused
 
+  // Normalize time format from database (HH:MM:SS) to dropdown format (HH:MM)
+  const normalizeTimeFromDB = (timeString: string): string => {
+    if (!timeString) return '09:00'
+    
+    // If it's already in HH:MM format, return as is
+    if (timeString.match(/^\d{2}:\d{2}$/)) {
+      return timeString
+    }
+    
+    // If it's in HH:MM:SS format, remove the seconds
+    const match = timeString.match(/^(\d{2}):(\d{2}):\d{2}$/)
+    if (match) {
+      return `${match[1]}:${match[2]}`
+    }
+    
+    // Fallback to default
+    return '09:00'
+  }
+
   // Generate time options for dropdowns in 24-hour format
   const generateTimeOptions = () => {
     const times = []
-    for (let hour = 1; hour < 24; hour++) { // Start from 1 to avoid midnight
+    for (let hour = 0; hour < 24; hour++) { // Start from 0 to include midnight
       for (const minute of ['00', '30']) {
         const timeStr = `${hour.toString().padStart(2, '0')}:${minute}`
         times.push({ value: timeStr, label: timeStr }) // Use 24-hour format for both value and label
@@ -55,56 +74,75 @@ export default function BusinessHoursPage({ params }: PageProps) {
       const data = await response.json()
 
       if (data.success) {
-        setBusinessHours(data.hours)
+        // If no hours exist, create default inactive hours for all 7 days
+        if (!data.hours || data.hours.length === 0) {
+          const defaultHours: BusinessHour[] = Array.from({ length: 7 }, (_, index) => ({
+            day_of_week: index,
+            open_time: '09:00',
+            close_time: '17:00',
+            is_active: false
+          }))
+          setBusinessHours(defaultHours)
+        } else {
+          // Ensure we have all 7 days represented
+          const completeHours: BusinessHour[] = []
+
+          for (let day = 0; day < 7; day++) {
+            const existing = data.hours.find((h: BusinessHour) => h.day_of_week === day)
+            if (existing) {
+              // Ensure existing hours have valid time values and normalize them
+              const normalizedHour = {
+                ...existing,
+                open_time: normalizeTimeFromDB(existing.open_time || '09:00'),
+                close_time: normalizeTimeFromDB(existing.close_time || '17:00')
+              }
+              completeHours.push(normalizedHour)
+            } else {
+              // Add missing day with default values
+              completeHours.push({
+                day_of_week: day,
+                open_time: '09:00',
+                close_time: '17:00',
+                is_active: false
+              })
+            }
+          }
+
+          setBusinessHours(completeHours)
+        }
       }
     } catch (error) {
       console.error('Error loading business hours:', error)
+      // If there's an error, still show default hours so user can configure
+      const defaultHours: BusinessHour[] = Array.from({ length: 7 }, (_, index) => ({
+        day_of_week: index,
+        open_time: '09:00',
+        close_time: '17:00',
+        is_active: false
+      }))
+      setBusinessHours(defaultHours)
     } finally {
       setLoadingHours(false)
     }
   }, [])
 
-  const checkAuth = useCallback(() => {
-    const savedUser = localStorage.getItem('businessAdmin')
-    console.log('Checking auth, savedUser:', !!savedUser)
-
-    if (savedUser) {
-      try {
-        const userData = JSON.parse(savedUser)
-        console.log('Parsed user data:', userData)
-
-        // Validate that we have required fields
-        if (!userData.businessId) {
-          console.error('User data missing businessId')
-          localStorage.removeItem('businessAdmin')
-          router.push(`/${businessName}/login`)
-          return
-        }
-
-        setUser(userData)
-        loadBusinessHours(userData.businessId)
-      } catch (error) {
-        console.error('Error parsing user data:', error)
-        localStorage.removeItem('businessAdmin')
-        router.push(`/${businessName}/login`)
-      }
-    } else {
-      console.log('No saved user, redirecting to login')
-      router.push(`/${businessName}/login`)
-    }
-    setIsLoading(false)
-  }, [businessName, router, loadBusinessHours])
 
   useEffect(() => {
     const getParams = async () => {
       const resolvedParams = await params
-      const name = decodeURIComponent(resolvedParams.businessname)
-      setBusinessName(name)
-      checkAuth()
-    }
+      const businessNameDecoded = decodeURIComponent(resolvedParams.businessname)
+      setBusinessName(businessNameDecoded)
 
+      // Wait for businessName to be set before checking auth
+      const user = await requireBusinessAdminAuth(businessNameDecoded, router)
+      if (user) {
+        setUser(user)
+        loadBusinessHours(user.businessId)
+      }
+      setIsLoading(false)
+    }
     getParams()
-  }, [params, checkAuth])
+  }, [params, router, loadBusinessHours])
 
   const updateDayHours = (dayIndex: number, field: keyof BusinessHour, value: string | boolean) => {
     setBusinessHours(prev => prev.map(hour => {
@@ -113,12 +151,20 @@ export default function BusinessHoursPage({ params }: PageProps) {
 
         // If activating a day and times are empty, set reasonable defaults
         if (field === 'is_active' && value === true) {
-          if (!updatedHour.open_time || updatedHour.open_time === '00:00') {
+          if (!updatedHour.open_time || updatedHour.open_time === '00:00' || updatedHour.open_time === '') {
             updatedHour.open_time = '09:00'
           }
-          if (!updatedHour.close_time || updatedHour.close_time === '00:00') {
+          if (!updatedHour.close_time || updatedHour.close_time === '00:00' || updatedHour.close_time === '') {
             updatedHour.close_time = '17:00'
           }
+        }
+
+        // Ensure times are never empty or null
+        if (field === 'open_time' && (!value || value === '')) {
+          updatedHour.open_time = '09:00'
+        }
+        if (field === 'close_time' && (!value || value === '')) {
+          updatedHour.close_time = '17:00'
         }
 
         return updatedHour
@@ -210,13 +256,13 @@ export default function BusinessHoursPage({ params }: PageProps) {
 
   const setAllDays = (isActive: boolean) => {
     setBusinessHours(prev => prev.map(hour => {
-      if (isActive && (!hour.open_time || !hour.close_time)) {
-        // Set default times if activating and no times are set
+      if (isActive && (!hour.open_time || !hour.close_time || hour.open_time === '' || hour.close_time === '')) {
+        // Set default times if activating and no times are set or they are empty
         return {
           ...hour,
           is_active: isActive,
-          open_time: '09:00',
-          close_time: '17:00'
+          open_time: hour.open_time || '09:00',
+          close_time: hour.close_time || '17:00'
         }
       }
       return { ...hour, is_active: isActive }
@@ -310,8 +356,33 @@ export default function BusinessHoursPage({ params }: PageProps) {
                   ))}
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {businessHours.map((hour) => (
+                <>
+                  {/* Show info message if business has no active hours */}
+                  {businessHours.every(hour => !hour.is_active) && (
+                    <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className="flex">
+                        <div className="flex-shrink-0">
+                          <svg className="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div className="ml-3">
+                          <h3 className="text-sm font-medium text-blue-800">
+                            Configura los horarios de tu negocio
+                          </h3>
+                          <div className="mt-2 text-sm text-blue-700">
+                            <p>
+                              Selecciona los días que tu negocio estará abierto y configura los horarios.
+                              Los clientes podrán ver esta información al agendar citas.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-4">
+                    {businessHours.map((hour) => (
                     <div key={hour.day_of_week} className="border rounded-lg p-4" style={{ borderColor: 'var(--border)', backgroundColor: 'var(--bg-secondary)' }}>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
@@ -367,8 +438,9 @@ export default function BusinessHoursPage({ params }: PageProps) {
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                </>
               )}
             </CardContent>
           </Card>

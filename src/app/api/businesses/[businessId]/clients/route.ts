@@ -59,7 +59,9 @@ export async function GET(request: Request, { params }: RouteParams) {
             id,
             appointment_date,
             status,
-            services (price)
+            services (
+              price
+            )
           `)
           .eq('business_id', businessId)
           .eq('client_id', clientRel.client_id)
@@ -70,9 +72,13 @@ export async function GET(request: Request, { params }: RouteParams) {
 
         const appointmentCount = appointments?.length || 0
         const completedAppointments = appointments?.filter(a => a.status === 'completed') || []
-        const totalSpent = completedAppointments.reduce((sum, appointment) => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          return sum + ((appointment.services as any)?.price || 0)
+        interface AppointmentWithService {
+          services?: { price?: number }
+        }
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const totalSpent = (completedAppointments as any[]).reduce((sum: number, appointment: AppointmentWithService) => {
+          return sum + (appointment.services?.price || 0)
         }, 0)
 
         // Get last appointment date

@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/Input'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { AddressAutocomplete, AddressDetails } from '@/components/ui/AddressAutocomplete'
 import { ClientThemeToggle } from '@/components/ui/ClientThemeToggle'
+import { ImageUploader } from '@/components/ui/ImageUploader'
 import { BusinessAdminRegistrationForm, User, Business } from '@/types'
 
 interface BusinessRegistrationSuccessData {
@@ -37,6 +38,9 @@ export function BusinessRegistrationForm({ token, onSuccess }: BusinessRegistrat
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<Partial<BusinessAdminRegistrationForm & { confirmPassword: string }>>({})
   const [addressDetails, setAddressDetails] = useState<AddressDetails | null>(null)
+  const [selectedImage, setSelectedImage] = useState<File | null>(null)
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null)
+  const [uploadingImage, setUploadingImage] = useState(false)
 
   const handleInputChange = (field: keyof BusinessAdminRegistrationForm) => (
     e: React.ChangeEvent<HTMLInputElement>
@@ -54,6 +58,45 @@ export function BusinessRegistrationForm({ token, onSuccess }: BusinessRegistrat
     // Clear address error when address is selected
     if (errors.address) {
       setErrors(prev => ({ ...prev, address: '' }))
+    }
+  }
+
+  const handleImageSelect = (file: File, previewUrl: string) => {
+    setSelectedImage(file)
+    setImagePreviewUrl(previewUrl)
+  }
+
+  const handleImageRemove = () => {
+    setSelectedImage(null)
+    setImagePreviewUrl(null)
+  }
+
+  const uploadBusinessImage = async (businessId: string): Promise<string | null> => {
+    if (!selectedImage) return null
+
+    setUploadingImage(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', selectedImage)
+      formData.append('businessId', businessId)
+
+      const response = await fetch('/api/upload/business-image', {
+        method: 'POST',
+        body: formData
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to upload image')
+      }
+
+      return data.url
+    } catch (error) {
+      console.error('Image upload error:', error)
+      throw error
+    } finally {
+      setUploadingImage(false)
     }
   }
 
@@ -133,11 +176,37 @@ export function BusinessRegistrationForm({ token, onSuccess }: BusinessRegistrat
       }
 
       if (data.success) {
+        // Upload business image if one was selected
+        let imageUrl = null
+        if (selectedImage) {
+          try {
+            imageUrl = await uploadBusinessImage(data.business.id)
+
+            // Update business with image URL
+            if (imageUrl) {
+              await fetch(`/api/businesses/${data.business.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  business_name: data.business.business_name,
+                  owner_name: data.business.owner_name,
+                  business_phone: data.business.phone,
+                  address: data.business.address,
+                  business_image_url: imageUrl
+                })
+              })
+            }
+          } catch (imageError) {
+            console.error('Image upload failed:', imageError)
+            // Continue with registration even if image upload fails
+          }
+        }
+
         onSuccess({
           success: true,
           message: 'Registration successful!',
           user: data.user,
-          business: data.business
+          business: { ...data.business, business_image_url: imageUrl || data.business.business_image_url }
         })
       } else {
         setErrors({ email: 'Registration failed. Please try again.' })
@@ -278,7 +347,6 @@ export function BusinessRegistrationForm({ token, onSuccess }: BusinessRegistrat
                   initialValue={formData.address}
                   disabled={isSubmitting}
                   className="w-full"
-                  darkMode={true}
                 />
                 {errors.address && (
                   <p className="mt-1 text-sm text-red-400">{errors.address}</p>
@@ -311,12 +379,20 @@ export function BusinessRegistrationForm({ token, onSuccess }: BusinessRegistrat
                 )}
               </div>
 
-              {/* TODO: Add image upload for business_image */}
-              <div className="rounded-lg border-2 border-dashed p-6 text-center" style={{ borderColor: 'var(--border-color)' }}>
-                <div style={{ color: 'var(--text-secondary)' }}>
-                  <p className="text-sm">Foto del Negocio (Opcional)</p>
-                  <p className="text-xs mt-1">Próximamente - puedes agregar esto después</p>
-                </div>
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+                  Logo del Negocio (Opcional)
+                </label>
+                <ImageUploader
+                  onImageSelect={handleImageSelect}
+                  onImageRemove={handleImageRemove}
+                  currentImageUrl={imagePreviewUrl || undefined}
+                  disabled={isSubmitting || uploadingImage}
+                  className="w-full"
+                />
+                <p className="mt-1 text-xs" style={{ color: 'var(--text-secondary)' }}>
+                  Sube una imagen que represente tu negocio. Recomendado: 800x800px, máximo 5MB.
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -326,11 +402,16 @@ export function BusinessRegistrationForm({ token, onSuccess }: BusinessRegistrat
             <CardContent className="pt-6">
               <Button
                 type="submit"
-                loading={isSubmitting}
+                loading={isSubmitting || uploadingImage}
                 className="w-full"
                 size="lg"
               >
-                {isSubmitting ? 'Creando Cuenta...' : 'Crear Cuenta de Negocio'}
+                {uploadingImage
+                  ? 'Subiendo imagen...'
+                  : isSubmitting
+                  ? 'Creando Cuenta...'
+                  : 'Crear Cuenta de Negocio'
+                }
               </Button>
 
               <p className="mt-4 text-center text-sm" style={{ color: 'var(--text-secondary)' }}>

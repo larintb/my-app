@@ -6,7 +6,31 @@ import { Input } from '@/components/ui/Input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { ClientThemeToggle } from '@/components/ui/ClientThemeToggle'
 import { SuperUserLoginForm } from '@/components/forms/SuperUserLoginForm'
-import { User } from '@/types'
+import { User, Business } from '@/types'
+
+interface RecentAppointment {
+  id: string
+  appointment_date: string
+  appointment_time: string
+  status: string
+  users?: {
+    first_name?: string
+    last_name?: string
+  }
+  services?: {
+    name?: string
+  }
+}
+
+interface BusinessWithStats extends Business {
+  stats?: {
+    activeServices?: number
+    totalClients?: number
+    activeTokens?: number
+    totalAppointments?: number
+  }
+  recentAppointments?: RecentAppointment[]
+}
 
 export default function AdminDashboard() {
   // ALL HOOKS MUST BE AT THE TOP - BEFORE ANY CONDITIONAL RETURNS
@@ -17,10 +41,13 @@ export default function AdminDashboard() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [selectedBusiness, setSelectedBusiness] = useState('')
   const [tokenQuantity, setTokenQuantity] = useState(1)
-  const [businesses, setBusinesses] = useState<{ id: string; business_name: string; owner_name: string }[]>([])
+  const [businesses, setBusinesses] = useState<Business[]>([])
   const [stats, setStats] = useState<{ activeBusinesses: number; totalClients: number; activeTokens: number; totalAppointments: number } | null>(null)
   const [loadingData, setLoadingData] = useState(false)
   const [generatedTokens, setGeneratedTokens] = useState<string[]>([])
+  const [showBusinesses, setShowBusinesses] = useState(false)
+  const [selectedBusinessDetails, setSelectedBusinessDetails] = useState<BusinessWithStats | null>(null)
+  const [loadingBusinessDetails, setLoadingBusinessDetails] = useState(false)
 
   const checkAuth = useCallback(() => {
     const savedUser = localStorage.getItem('superuser')
@@ -204,28 +231,23 @@ export default function AdminDashboard() {
     alert(`${type} copied to clipboard!`)
   }
 
-  const seedDemoData = async () => {
-    setIsGenerating(true)
-    try {
-      const response = await fetch('/api/admin/seed-demo', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-      })
 
+  const loadBusinessDetails = async (businessId: string) => {
+    setLoadingBusinessDetails(true)
+    try {
+      const response = await fetch(`/api/admin/businesses/${businessId}`)
       const data = await response.json()
 
       if (data.success) {
-        alert('✅ Demo data generated successfully! Check your business dashboards.')
-        // Refresh stats after generating demo data
-        loadAdminData()
+        setSelectedBusinessDetails(data.business)
       } else {
-        alert('❌ Failed to generate demo data: ' + data.error)
+        alert('❌ Failed to load business details: ' + data.error)
       }
     } catch (error) {
-      console.error('Error generating demo data:', error)
-      alert('❌ Failed to generate demo data')
+      console.error('Error loading business details:', error)
+      alert('❌ Failed to load business details')
     } finally {
-      setIsGenerating(false)
+      setLoadingBusinessDetails(false)
     }
   }
 
@@ -551,30 +573,230 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-        {/* Development Tools */}
+        {/* Business Management Section */}
         <Card className="feature-card">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              🛠️ Development Tools
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                🏢 Business Management
+              </div>
+              <Button
+                onClick={() => setShowBusinesses(!showBusinesses)}
+                variant="outline"
+                size="sm"
+                className="transition-all duration-300 hover:border-green-500"
+              >
+                {showBusinesses ? 'Hide Businesses' : 'View Businesses'}
+              </Button>
             </CardTitle>
             <CardDescription>
-              Tools for testing and development (remove in production)
+              View and manage all registered businesses in the system
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button
-              onClick={seedDemoData}
-              variant="outline"
-              className="w-full transition-all duration-300 hover:border-green-500"
-              disabled={isGenerating}
-            >
-              🌱 Generate Demo Data
-            </Button>
-            <p className="text-xs mt-2" style={{ color: 'var(--text-secondary)' }}>
-              This will create sample services, clients, and appointments for existing businesses
-            </p>
+            {showBusinesses && (
+              <div className="space-y-4">
+                {loadingData ? (
+                  <div className="space-y-3">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="animate-pulse rounded-lg p-4" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                        <div className="h-4 w-48 rounded mb-2" style={{ backgroundColor: 'var(--bg-tertiary)' }}></div>
+                        <div className="h-3 w-32 rounded" style={{ backgroundColor: 'var(--bg-tertiary)' }}></div>
+                      </div>
+                    ))}
+                  </div>
+                ) : businesses.length > 0 ? (
+                  <div className="grid gap-4">
+                    {businesses.map((business) => (
+                      <div
+                        key={business.id}
+                        className="rounded-lg p-4 feature-card border transition-all duration-300 hover:border-green-500"
+                        style={{ border: '1px solid var(--border-color)' }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-2 flex-1">
+                            <div className="flex items-center gap-3">
+                              <h3 className="font-semibold text-lg" style={{ color: 'var(--text-primary)' }}>
+                                {business.business_name}
+                              </h3>
+                              <span className="text-sm px-2 py-1 rounded" style={{
+                                backgroundColor: 'var(--bg-tertiary)',
+                                color: 'var(--text-muted)',
+                                border: '1px solid #1DB954'
+                              }}>
+                                Active
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                              <div>
+                                <span style={{ color: 'var(--text-muted)' }}>Owner: </span>
+                                <span style={{ color: 'var(--text-primary)' }}>{business.owner_name}</span>
+                              </div>
+                              <div>
+                                <span style={{ color: 'var(--text-muted)' }}>Phone: </span>
+                                <span style={{ color: 'var(--text-primary)' }}>{business.phone}</span>
+                              </div>
+                              <div className="md:col-span-2">
+                                <span style={{ color: 'var(--text-muted)' }}>Address: </span>
+                                <span style={{ color: 'var(--text-primary)' }}>
+                                  {business.address}
+                                </span>
+                              </div>
+                              <div>
+                                <span style={{ color: 'var(--text-muted)' }}>Created: </span>
+                                <span style={{ color: 'var(--text-primary)' }}>
+                                  {new Date(business.created_at).toLocaleDateString()}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex flex-col gap-2 ml-4">
+                            <Button
+                              onClick={() => loadBusinessDetails(business.id)}
+                              variant="outline"
+                              size="sm"
+                              className="transition-all duration-300 hover:border-green-500"
+                              disabled={loadingBusinessDetails}
+                            >
+                              {loadingBusinessDetails && selectedBusinessDetails?.id === business.id ? 'Loading...' : 'View Details'}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8" style={{ color: 'var(--text-muted)' }}>
+                    No businesses registered yet. Generate a business token to get started.
+                  </div>
+                )}
+
+                {/* Business Details Modal */}
+                {selectedBusinessDetails && (
+                  <div className="mt-6 rounded-lg p-6 feature-card" style={{ border: '2px solid #1DB954' }}>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-xl font-bold spotify-green-text">
+                        {selectedBusinessDetails.business_name} - Detailed View
+                      </h3>
+                      <Button
+                        onClick={() => setSelectedBusinessDetails(null)}
+                        variant="outline"
+                        size="sm"
+                        className="transition-all duration-300 hover:border-red-500"
+                      >
+                        Close
+                      </Button>
+                    </div>
+
+                    <div className="grid gap-6 md:grid-cols-2">
+                      {/* Business Info */}
+                      <div className="space-y-4">
+                        <h4 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Business Information</h4>
+                        <div className="space-y-2 text-sm">
+                          <div>
+                            <span style={{ color: 'var(--text-muted)' }}>Owner: </span>
+                            <span style={{ color: 'var(--text-primary)' }}>{selectedBusinessDetails.owner_name}</span>
+                          </div>
+                          <div>
+                            <span style={{ color: 'var(--text-muted)' }}>Phone: </span>
+                            <span style={{ color: 'var(--text-primary)' }}>{selectedBusinessDetails.phone}</span>
+                          </div>
+                          <div>
+                            <span style={{ color: 'var(--text-muted)' }}>Address: </span>
+                            <span style={{ color: 'var(--text-primary)' }}>{selectedBusinessDetails.address}</span>
+                          </div>
+                          <div>
+                            <span style={{ color: 'var(--text-muted)' }}>Created: </span>
+                            <span style={{ color: 'var(--text-primary)' }}>
+                              {new Date(selectedBusinessDetails.created_at).toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Business Stats */}
+                      <div className="space-y-4">
+                        <h4 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Business Statistics</h4>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="text-center p-3 rounded" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                            <div className="text-xl font-bold spotify-green-text">
+                              {selectedBusinessDetails.stats?.activeServices || 0}
+                            </div>
+                            <div className="text-xs" style={{ color: 'var(--text-muted)' }}>Active Services</div>
+                          </div>
+                          <div className="text-center p-3 rounded" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                            <div className="text-xl font-bold" style={{ color: '#10b981' }}>
+                              {selectedBusinessDetails.stats?.totalClients || 0}
+                            </div>
+                            <div className="text-xs" style={{ color: 'var(--text-muted)' }}>Total Clients</div>
+                          </div>
+                          <div className="text-center p-3 rounded" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                            <div className="text-xl font-bold" style={{ color: '#8b5cf6' }}>
+                              {selectedBusinessDetails.stats?.activeTokens || 0}
+                            </div>
+                            <div className="text-xs" style={{ color: 'var(--text-muted)' }}>Active Tokens</div>
+                          </div>
+                          <div className="text-center p-3 rounded" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                            <div className="text-xl font-bold" style={{ color: '#f59e0b' }}>
+                              {selectedBusinessDetails.stats?.totalAppointments || 0}
+                            </div>
+                            <div className="text-xs" style={{ color: 'var(--text-muted)' }}>Appointments</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Recent Appointments */}
+                    {selectedBusinessDetails.recentAppointments && selectedBusinessDetails.recentAppointments.length > 0 && (
+                      <div className="mt-6">
+                        <h4 className="font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>Recent Appointments</h4>
+                        <div className="space-y-2">
+                          {selectedBusinessDetails.recentAppointments.map((appointment: RecentAppointment) => (
+                            <div
+                              key={appointment.id}
+                              className="flex items-center justify-between p-3 rounded"
+                              style={{ backgroundColor: 'var(--bg-secondary)' }}
+                            >
+                              <div className="flex-1">
+                                <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                                  {appointment.users?.first_name} {appointment.users?.last_name}
+                                </div>
+                                <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                                  {appointment.services?.name}
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                                  {new Date(appointment.appointment_date).toLocaleDateString()}
+                                </div>
+                                <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                                  {appointment.appointment_time}
+                                </div>
+                              </div>
+                              <div className="ml-3">
+                                <span
+                                  className="text-xs px-2 py-1 rounded"
+                                  style={{
+                                    backgroundColor: appointment.status === 'confirmed' ? '#1DB954' :
+                                                   appointment.status === 'pending' ? '#f59e0b' : '#ef4444',
+                                    color: 'white'
+                                  }}
+                                >
+                                  {appointment.status}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
+
       </div>
     </div>
   )

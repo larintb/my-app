@@ -83,6 +83,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
       )
     }
 
+
     const updatedBusiness = await updateBusiness(businessId, {
       business_name: business_name.trim(),
       owner_name: owner_name.trim(),
@@ -100,6 +101,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
         address_place_id: address_details.place_id
       })
     })
+
 
     return NextResponse.json({
       success: true,

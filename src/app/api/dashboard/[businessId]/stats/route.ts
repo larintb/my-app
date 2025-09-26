@@ -32,7 +32,7 @@ export async function GET(request: Request, { params }: RouteParams) {
       todayAppointments: appointmentStats.todayAppointments,
       totalClients: clientCount,
       servicesOffered: services.length,
-      todayRevenue: appointmentStats.todayRevenue,
+      monthlyRevenue: appointmentStats.monthlyRevenue,
       monthlyAppointments: appointmentStats.monthlyAppointments,
       pendingAppointments: appointmentStats.pendingAppointments
     }
