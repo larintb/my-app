@@ -161,6 +161,55 @@ body {
   transform: translateY(-5px);
 }
 
+/* ScrollStack Custom Styles */
+.scroll-stack-container {
+  height: auto;
+  position: relative;
+  z-index: 1;
+}
+
+.scroll-stack-container .scroll-stack-inner {
+  padding: 5vh 3rem 150vh;
+}
+
+.scroll-stack-container .scroll-stack-card {
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: var(--feature-card-bg);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  height: 350px !important;
+}
+
+.scroll-stack-container .scroll-stack-card:hover {
+  background-color: var(--feature-card-hover-bg);
+  box-shadow: 0 30px 60px rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.3);
+  transform: translateY(-2px);
+}
+
+@media (prefers-color-scheme: dark) {
+  .scroll-stack-container .scroll-stack-card {
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  }
+
+  .scroll-stack-container .scroll-stack-card:hover {
+    box-shadow: 0 30px 60px rgba(34, 197, 94, 0.2);
+  }
+}
+
+@media (max-width: 768px) {
+  .scroll-stack-container .scroll-stack-card {
+    margin: 0 20px;
+    height: 300px !important;
+  }
+
+  .scroll-stack-container .scroll-stack-inner {
+    padding: 3vh 1rem 20rem;
+  }
+}
+
 .pricing-card-pro {
   background-color: var(--accent-color);
   color: var(--accent-text);

@@ -5,7 +5,7 @@ import AOS from 'aos';
 import 'aos/dist/aos.css';
 import { ClientThemeToggle } from '@/components/ui/ClientThemeToggle';
 import ElectricBorder from '@/components/ElectricBorder';
-import GlareHover from '@/components/GlareHover';
+import ScrollStack, { ScrollStackItem } from '@/components/ScrollStack';
 
 export default function Home() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -237,6 +237,66 @@ export default function Home() {
           </div>
         </section>
 
+        {/* ScrollStack Section */}
+        <section className="py-10" style={{ backgroundColor: 'var(--bg-secondary)', minHeight: '100vh' }}>
+          <div className="container mx-auto px-6">
+            <div className="text-center mb-8" data-aos="fade-up">
+              <h2 className="text-3xl md:text-4xl font-bold" style={{ color: 'var(--text-primary)' }}>Descubre las Ventajas</h2>
+              <p className="mt-4 max-w-2xl mx-auto" style={{ color: 'var(--text-secondary)' }}>Explora cómo myCard revoluciona la forma en que tu negocio se conecta con los clientes.</p>
+            </div>
+
+            <ScrollStack
+              useWindowScroll={true}
+              className="scroll-stack-container"
+              itemDistance={600}
+              itemStackDistance={40}
+              stackPosition="30%"
+              baseScale={0.8}
+              scaleEndPosition="20%"
+              itemScale={0.08}
+              rotationAmount={0}
+              blurAmount={0}
+            >
+              <ScrollStackItem>
+                <div className="p-6 rounded-xl shadow-lg" style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
+                  <div className="rounded-full h-16 w-16 flex items-center justify-center mb-4" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 spotify-green-text" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-2xl font-bold mb-3" style={{ color: 'var(--text-primary)' }}>Velocidad Instantánea</h3>
+                  <p className="text-base leading-relaxed" style={{ color: 'var(--text-secondary)' }}>Con solo tocar la tarjeta NFC, tus clientes acceden inmediatamente a toda tu información de negocio. Sin apps que descargar, sin códigos que escanear.</p>
+                </div>
+              </ScrollStackItem>
+
+              <ScrollStackItem>
+                <div className="p-6 rounded-xl shadow-lg" style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
+                  <div className="rounded-full h-16 w-16 flex items-center justify-center mb-4" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 spotify-green-text" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-2xl font-bold mb-3" style={{ color: 'var(--text-primary)' }}>Experiencia Premium</h3>
+                  <p className="text-base leading-relaxed" style={{ color: 'var(--text-secondary)' }}>Cada tarjeta está diseñada específicamente para tu marca, creando una experiencia memorable que diferencia tu negocio de la competencia.</p>
+                </div>
+              </ScrollStackItem>
+
+              <ScrollStackItem>
+                <div className="p-6 rounded-xl shadow-lg" style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
+                  <div className="rounded-full h-16 w-16 flex items-center justify-center mb-4" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 spotify-green-text" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-2xl font-bold mb-3" style={{ color: 'var(--text-primary)' }}>Analíticas Detalladas</h3>
+                  <p className="text-base leading-relaxed" style={{ color: 'var(--text-secondary)' }}>Conoce exactamente cuándo y cómo interactúan tus clientes con tu negocio. Datos en tiempo real para optimizar tu estrategia comercial.</p>
+                </div>
+              </ScrollStackItem>
+            </ScrollStack>
+          </div>
+        </section>
+        
+
         {/* Features Section */}
         <section id="features" className="py-20" style={{ backgroundColor: 'var(--bg-primary)' }}>
           <div className="container mx-auto px-6">
@@ -326,7 +386,14 @@ export default function Home() {
             </div>
             <div className="flex flex-col lg:flex-row justify-center items-stretch gap-8">
               {/* Basic Plan */}
-              <div className="w-full max-w-md rounded-xl p-8 shadow-lg flex flex-col feature-card" data-aos="fade-up" data-aos-delay="100">
+              <ElectricBorder
+                color="#ffffff"
+                speed={1}
+                chaos={0.3}
+                thickness={1}
+                style={{ borderRadius: 12 }}
+              >
+                <div className="w-full max-w-md rounded-xl p-8 shadow-lg flex flex-col feature-card" style={{ border: 'none' }} data-aos="fade-up" data-aos-delay="100">
                 <div className="flex-grow">
                   <h3 className="text-2xl font-semibold" style={{ color: 'var(--text-primary)' }}>Inicial</h3>
                   <p className="mt-2" style={{ color: 'var(--text-secondary)' }}>Perfecto para individuos y pequeñas empresas.</p>
@@ -349,24 +416,17 @@ export default function Home() {
                 >
                   Elegir Inicial
                 </a>
-              </div>
+                </div>
+              </ElectricBorder>
               {/* Pro Plan */}
-              <ElectricBorder
+              {/* <ElectricBorder
                 color="#22c55e"
                 speed={1}
                 chaos={0.3}
-                thickness={2}
+                thickness={1}
                 style={{ borderRadius: 12 }}
               >
-                <GlareHover
-                  glareColor="#ffffff"
-                  glareOpacity={0.3}
-                  glareAngle={-30}
-                  glareSize={300}
-                  transitionDuration={800}
-                  playOnce={false}
-                >
-                <div className="w-full max-w-md p-8 shadow-2xl transform lg:scale-105 flex flex-col feature-card" data-aos="fade-up" data-aos-delay="200">
+                <div className="w-full max-w-md p-8 shadow-2xl transform lg:scale-105 flex flex-col feature-card" style={{ border: 'none' }} data-aos="fade-up" data-aos-delay="200">
                 <div className="flex-grow">
                   <h3 className="text-2xl font-semibold spotify-green-text">Pro</h3>
                   <p className="mt-2" style={{ color: 'var(--text-primary)' }}>Para empresas en crecimiento que necesitan más.</p>
@@ -375,13 +435,13 @@ export default function Home() {
                     <span className="text-xl ml-2" style={{ color: 'var(--text-secondary)' }}>MXN / mes</span>
                   </div>
                   <ul className="mt-8 space-y-4" style={{ color: 'var(--text-secondary)' }}>
-                    <li className="flex items-center"><svg className="w-5 h-5 spotify-green-text mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>Hasta 5 Tarjetas NFC</li>
+                    <li className="flex items-center"><svg className="w-5 h-5 spotify-green-text mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>Hasta 10 Tarjetas NFC</li>
                     <li className="flex items-center"><svg className="w-5 h-5 spotify-green-text mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>Todo en Inicial, además de:</li>
                     <li className="flex items-center"><svg className="w-5 h-5 spotify-green-text mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>Analíticas Avanzadas</li>
                     <li className="flex items-center"><svg className="w-5 h-5 spotify-green-text mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>Soporte Prioritario</li>
                   </ul>
                 </div>
-                
+
                 <a
                   href="#contact"
                   onClick={(e) => handleNavClick(e, 'contact')}
@@ -389,9 +449,39 @@ export default function Home() {
                 >
                   Elegir Pro
                 </a>
-                
+
                 </div>
-                </GlareHover>
+              </ElectricBorder> */}
+              <ElectricBorder
+                color="#22c55e"
+                speed={1}
+                chaos={0.3}
+                thickness={1}
+                style={{ borderRadius: 12 }}
+              >
+                <div className="w-full max-w-md rounded-xl p-8 shadow-lg flex flex-col feature-card" style={{ border: 'none' }} data-aos="fade-up" data-aos-delay="100">
+                <div className="flex-grow">
+                  <h3 className="text-2xl font-semibold spotify-green-text">Pro</h3>
+                  <p className="mt-2" style={{ color: 'var(--text-primary)' }}>Para empresas en crecimiento que necesitan más.</p>
+                  <div className="mt-6 flex items-baseline">
+                    <span className="text-5xl font-extrabold" style={{ color: 'var(--text-primary)' }}>$2,000</span>
+                    <span className="text-xl ml-2" style={{ color: 'var(--text-secondary)' }}>MXN / mes</span>
+                  </div>
+                  <ul className="mt-8 space-y-4" style={{ color: 'var(--text-secondary)' }}>
+                    <li className="flex items-center"><svg className="w-5 h-5 spotify-green-text mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>Hasta 10 Tarjetas NFC</li>
+                    <li className="flex items-center"><svg className="w-5 h-5 spotify-green-text mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>Todo en Inicial, además de:</li>
+                    <li className="flex items-center"><svg className="w-5 h-5 spotify-green-text mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>Analíticas Avanzadas</li>
+                    <li className="flex items-center"><svg className="w-5 h-5 spotify-green-text mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>Soporte Prioritario</li>
+                  </ul>
+                </div>
+                <a
+                  href="#contact"
+                  onClick={(e) => handleNavClick(e, 'contact')}
+                  className="block text-center w-full spotify-green text-black font-semibold py-3 mt-8 rounded-full hover:bg-green-400 transition duration-300 cursor-pointer"
+                >
+                  Elegir Pro
+                </a>
+                </div>
               </ElectricBorder>
             </div>
             

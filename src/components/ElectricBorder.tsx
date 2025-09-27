@@ -33,6 +33,18 @@ const ElectricBorder: React.FC<ElectricBorderProps> = ({
     const host = rootRef.current;
     if (!svg || !host) return;
 
+    // Check if device prefers reduced motion or is mobile
+    const isMobile = window.innerWidth <= 768;
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Disable complex animations on mobile or when reduced motion is preferred
+    if (isMobile || prefersReducedMotion) {
+      if (strokeRef.current) {
+        strokeRef.current.style.filter = 'none';
+      }
+      return;
+    }
+
     if (strokeRef.current) {
       strokeRef.current.style.filter = `url(#${filterId})`;
     }
@@ -57,7 +69,11 @@ const ElectricBorder: React.FC<ElectricBorderProps> = ({
     [...dyAnims, ...dxAnims].forEach(a => a.setAttribute('dur', `${dur}s`));
 
     const disp = svg.querySelector('feDisplacementMap');
-    if (disp) disp.setAttribute('scale', String(30 * (chaos || 1)));
+    if (disp) {
+      // Reduce chaos effect on smaller screens for better performance
+      const effectiveChaosFactor = isMobile ? (chaos || 1) * 0.5 : (chaos || 1);
+      disp.setAttribute('scale', String(30 * effectiveChaosFactor));
+    }
 
     const filterEl = svg.querySelector<SVGFilterElement>(`#${CSS.escape(filterId)}`);
     if (filterEl) {

@@ -7,6 +7,11 @@
   isolation: isolate;
 }
 
+.electric-border .feature-card {
+  margin: -1px;
+  border-radius: inherit;
+}
+
 .eb-svg {
   position: fixed;
   left: -10000px;
@@ -66,4 +71,32 @@
   filter: blur(32px);
   opacity: 0.3;
   background: linear-gradient(-30deg, var(--electric-light-color), transparent, var(--electric-border-color));
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .eb-glow-1 {
+    opacity: 0.3;
+    filter: blur(calc(0.3px + (var(--eb-border-width) * 0.15)));
+  }
+
+  .eb-glow-2 {
+    opacity: 0.3;
+    filter: blur(calc(1px + (var(--eb-border-width) * 0.3)));
+  }
+
+  .eb-background-glow {
+    filter: blur(16px);
+    opacity: 0.2;
+    transform: scale(1.04);
+  }
+}
+
+/* Reduced motion for better performance */
+@media (prefers-reduced-motion: reduce) {
+  .eb-glow-1,
+  .eb-glow-2,
+  .eb-background-glow {
+    filter: none;
+  }
 }
